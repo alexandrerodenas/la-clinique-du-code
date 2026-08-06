@@ -24,23 +24,14 @@ checkup** pour les faire consulter sur votre code.
 Chaque praticien est un expert. La clinique ne fait pas d'opérations à votre place :
 elle **diagnostique**, elle **recommande**, et c'est vous qui décidez du traitement.
 
-```
-┌─────────────────────────────────────────────┐
-│                🏥 LA CLINIQUE DU CODE        │
-│                                             │
-│   /checkup ────►┌────────────────────────┐  │
-│                 │ 🧠 Thérapeute du Code   │  │
-│                 │    (code-therapist)     │  │
-│                 ├────────────────────────┤  │
-│                 │ 🔬 Diagnosticien des    │  │
-│                 │    Tests (test-         │  │
-│                 │    diagnostician)       │  │
-│                 └────────────────────────┘  │
-│                        │                    │
-│                        ▼                    │
-│              📋 Rapport de checkup          │
-│              + verdict + ordonnance         │
-└─────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    U["🖥️ Utilisateur"] -->|"/checkup"| C[("🏥 La Clinique du Code")]
+    C --> T["🧠 Thérapeute du Code<br/><i>code-therapist</i>"]
+    C --> D["🔬 Diagnosticien des Tests<br/><i>test-diagnostician</i>"]
+    T -->|examine le code| R["📋 Rapport de checkup<br/>verdict + ordonnance"]
+    D -->|examine les tests| R
+    R -->|propose les soins| U
 ```
 
 ---
