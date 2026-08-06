@@ -149,6 +149,58 @@ La configuration est chargée au démarrage. Quittez et relancez opencode.
 
 ---
 
+## 🤖 Installation par un agent de code (from scratch)
+
+Pas envie de le faire à la main ? Copiez-collez le prompt suivant dans votre
+assistant de code. Il installe la clinique tout seul, étape par étape :
+
+```text
+Tu vas installer « La Clinique du Code » (un plugin opencode : 2 skills + 1
+commande + un système prompt) depuis le dépôt
+https://github.com/alexandrerodenas/la-clinique-du-code.git
+
+Suis ces étapes exactement, dans l'ordre :
+
+1. Clone le dépôt dans un dossier temporaire :
+   git clone https://github.com/alexandrerodenas/la-clinique-du-code.git <tmp>
+
+2. Détermine le dossier de configuration global d'opencode :
+   - Windows : %USERPROFILE%\.config\opencode\
+   - Linux / macOS : ~/.config/opencode/
+   (appelons-le <config>)
+
+3. Installe les deux praticiens (skills) :
+   - copie récursivement <tmp>\skills\code-therapist   vers <config>\skills\code-therapist
+   - copie récursivement <tmp>\skills\test-diagnostician vers <config>\skills\test-diagnostician
+
+4. Installe la commande /checkup :
+   - copie <tmp>\commands\checkup.md vers <config>\commands\checkup.md
+
+5. Installe le système prompt de la clinique :
+   - lis le fichier <tmp>\templates\AGENTS.md.clinic
+   - ajoute son contenu à la fin du fichier <config>\AGENTS.md
+     (en retirant la première ligne d'en-tête « # Ce bloc est à ajouter dans le
+     fichier AGENTS.md de votre projet. »)
+   - si <config>\AGENTS.md n'existe pas, crée-le avec ce contenu
+
+6. Nettoie le dossier temporaire <tmp>.
+
+7. Vérifie que les trois chemins cibles existent (skills x2 + commande) et que
+   le bloc clinique est bien présent dans AGENTS.md. Annonce le résultat.
+
+8. Préviens l'utilisateur : il doit quitter et redémarrer opencode pour que la
+   Clinique prenne effet.
+
+Si tu détectes d'anciens praticiens installés ailleurs (par exemple
+~/.agents/skills/code-therapy ou ~/.agents/skills/test-diagnostics), demande à
+l'utilisateur s'il veut les supprimer avant de terminer.
+```
+
+Ce prompt fonctionne sur n'importe quel assistant de code disposant d'un shell
+(Windows, Linux ou macOS) : il ne présuppose ni script, ni outil spécifique.
+
+---
+
 ## 🧭 Utilisation
 
 ```bash
