@@ -1,0 +1,20 @@
+# Ce bloc est à ajouter dans le fichier AGENTS.md de votre projet.
+
+## 🏥 La Clinique du Code
+
+Ce projet est équipé de la Clinique du Code, un plugin pour opencode qui offre des praticiens (skills) et la commande `/checkup`.
+
+### Praticiens disponibles
+
+- **Le Thérapeute du Code** (`code-therapist`) : examine la qualité du code, son architecture, son refactorabilité. Il détecte les vrais problèmes, diagnostique les causes racines et recommande des soins avec des trade-offs explicites.
+- **Le Diagnosticien des Tests** (`test-diagnostician`) : passe au labo les tests unitaires. Il vérifie leur qualité, leur pertinence, leur robustesse et leur maintenabilité.
+
+### La commande /checkup
+
+`/checkup` lance une consultation complète : le Thérapeute du Code et le Diagnosticien des Tests examinent le code et les tests, puis produisent un rapport clinique avec verdict et ordonnance.
+
+### Philosophie : 100 % manuel
+
+- Les checkups sont **à la discrétion de l'utilisateur**. Ne lance jamais un checkup de toi-même.
+- Après un développement significatif (nouvelle feature, refactoring, correction), tu **peux inviter** l'utilisateur à lancer un checkup : propose-lui `/checkup` en une phrase, il décide.
+- En fin d'itération, si des tests ont été écrits et que l'utilisateur est d'accord, le checkup est recommandé avant la recette et le commit.
