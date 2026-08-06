@@ -3,7 +3,7 @@
 > Prenez soin de votre code. Il prendra soin de votre santé mentale.
 
 ![Harness](https://img.shields.io/badge/harness-opencode-18181B?logo=opencode&logoColor=white)
-![Praticiens](https://img.shields.io/badge/praticiens-2-success)
+![Praticiens](https://img.shields.io/badge/praticiens-3-success)
 ![Mode](https://img.shields.io/badge/mode-100%25%20manuel-important)
 ![Checkup](https://img.shields.io/badge/checkup-pr%C3%AAt-blue)
 ![Langue](https://img.shields.io/badge/langue-Fran%C3%A7ais-9cf)
@@ -32,6 +32,9 @@ flowchart TD
     T -->|examine le code| R["📋 Rapport de checkup<br/>verdict + ordonnance"]
     D -->|examine les tests| R
     R -->|propose les soins| U
+    U -->|"radio du dépôt"| X["🩻 Radiologue de l'Architecture<br/><i>zone-of-pain</i>"]
+    X -->|churn + couplage| M["🩻 Compte rendu radiologique<br/>hotspots priorisés"]
+    M -->|candidats au refactoring| U
 ```
 
 ---
@@ -70,6 +73,26 @@ tests unitaires pour vérifier qu'ils sont dignes de confiance avant la recette.
 | Structure Given-When-Then | ⚠️ À revoir |
 | Pertinence des assertions (« ne jamais faire confiance à un test qu'on n'a pas vu échouer ») | ❌ À refaire |
 | Fragilité, couplage à l'implémentation, mutualisation des assets | |
+
+### 🩻 Le Radiologue de l'Architecture — `zone-of-pain`
+
+> « Votre dépôt aux rayons X, sans RDV. Je vous montre où ça fait mal. »
+
+Le Radiologue de l'Architecture est votre **spécialiste de l'imagerie médicale du
+dépôt**. Il passe le projet aux rayons X de l'historique git et des dépendances pour
+révéler les zones de douleur : les fichiers qui saignent (fort churn), ceux qui
+tiennent tout l'édifice entre leurs mains (fort couplage), et les couples de fichiers
+qui bougent toujours ensemble (couplage temporel).
+
+| Imagerie | Compte rendu |
+|---|---|
+| Churn git (fichiers les plus modifiés) | Top 5 des fichiers par score de douleur |
+| Couplage d'imports entrants | Candidats au refactoring priorisés |
+| Couplage temporel (commits groupés) | Fiabilité du résultat annoncée |
+| Aucune dépendance — Node ≥ 14, zéro `npm install` | Rapport `zone-of-pain.md` généré à la racine |
+
+La radio se prescrit à la demande — c'est lui qui désigne les patients prioritaires
+du Thérapeute.
 
 ---
 
@@ -119,8 +142,7 @@ git clone https://github.com/alexandrerodenas/la-clinique-du-code.git
 
 ```bash
 mkdir -p ~/.config/opencode/skills ~/.config/opencode/commands
-cp -r skills/code-therapist ~/.config/opencode/skills/
-cp -r skills/test-diagnostician ~/.config/opencode/skills/
+for skill in skills/*/; do cp -r "$skill" ~/.config/opencode/skills/; done
 cp commands/checkup.md ~/.config/opencode/commands/
 ```
 
@@ -146,8 +168,8 @@ Pas envie de le faire à la main ? Copiez-collez le prompt suivant dans votre
 assistant de code. Il installe la clinique tout seul, étape par étape :
 
 ```text
-Tu vas installer « La Clinique du Code » (un plugin opencode : 2 skills + 1
-commande + un système prompt) depuis le dépôt
+Tu vas installer « La Clinique du Code » (un plugin opencode : des praticiens
+[skills] + la commande /checkup + un système prompt) depuis le dépôt
 https://github.com/alexandrerodenas/la-clinique-du-code.git
 
 Suis ces étapes exactement, dans l'ordre :
@@ -160,9 +182,10 @@ Suis ces étapes exactement, dans l'ordre :
    - Linux / macOS : ~/.config/opencode/
    (appelons-le <config>)
 
-3. Installe les deux praticiens (skills) :
-   - copie récursivement <tmp>\skills\code-therapist   vers <config>\skills\code-therapist
-   - copie récursivement <tmp>\skills\test-diagnostician vers <config>\skills\test-diagnostician
+3. Installe tous les praticiens (skills) :
+   - pour chaque dossier <tmp>\skills\<nom>, copie-le récursivement vers
+     <config>\skills\<nom> (code-therapist, test-diagnostician, zone-of-pain,
+     et tous ceux qui apparaîtront à l'avenir)
 
 4. Installe la commande /checkup :
    - copie <tmp>\commands\checkup.md vers <config>\commands\checkup.md
@@ -176,15 +199,16 @@ Suis ces étapes exactement, dans l'ordre :
 
 6. Nettoie le dossier temporaire <tmp>.
 
-7. Vérifie que les trois chemins cibles existent (skills x2 + commande) et que
-   le bloc clinique est bien présent dans AGENTS.md. Annonce le résultat.
+7. Vérifie que tous les praticiens et la commande sont en place, et que le bloc
+   clinique est bien présent dans AGENTS.md. Annonce le résultat.
 
 8. Préviens l'utilisateur : il doit quitter et redémarrer opencode pour que la
    Clinique prenne effet.
 
 Si tu détectes d'anciens praticiens installés ailleurs (par exemple
-~/.agents/skills/code-therapy ou ~/.agents/skills/test-diagnostics), demande à
-l'utilisateur s'il veut les supprimer avant de terminer.
+~/.agents/skills/code-therapy, ~/.agents/skills/test-diagnostics ou
+~/.agents/skills/zone-of-pain), demande à l'utilisateur s'il veut les supprimer
+avant de terminer.
 ```
 
 Ce prompt fonctionne sur n'importe quel assistant de code disposant d'un shell
@@ -197,6 +221,12 @@ Ce prompt fonctionne sur n'importe quel assistant de code disposant d'un shell
 ```bash
 /checkup                                # consultation sur le travail de la session
 /checkup <chemin>                       # consultation sur un périmètre précis
+```
+
+Une radio du dépôt se prescrit à part, quand vous en avez besoin :
+
+```bash
+analyse la zone of pain de ce dépôt    # scan radiologique (churn + couplage)
 ```
 
 Après un développement significatif, votre assistant peut vous **inviter** à lancer un
@@ -227,14 +257,13 @@ requests. Juste une équipe de praticiens compétents, disponibles quand vous le
 
 ## 🚑 Recrutement — La clinique grandit
 
-L'équipe actuelle compte deux praticiens, mais la clinique est ouverte. Les prochains
+L'équipe actuelle compte trois praticiens, mais la clinique est ouverte. Les prochains
 spécialistes potentiels :
 
 | Poste | Spécialité |
 |---|---|
 | 🛡️ Le Garde-Fou de la Sécurité | analyse des vulnérabilités, secrets, injection |
 | ⚡ Le Kiné des Performances | analyses N+1, complexité algorithmique, cache |
-| 🏗️ L'Architecte des Frontières | cohésion des modules, découplage, dépendances |
 | ♿ Le Docteur de l'Accessibilité | WCAG, usages handicapés |
 | 📦 Le Diététicien des Dépendances | poids, obsolescence, licenses |
 

@@ -8,6 +8,7 @@ Ce projet est équipé de la Clinique du Code, un plugin pour opencode qui offre
 
 - **Le Thérapeute du Code** (`code-therapist`) : examine la qualité du code, son architecture, son refactorabilité. Il détecte les vrais problèmes, diagnostique les causes racines et recommande des soins avec des trade-offs explicites.
 - **Le Diagnosticien des Tests** (`test-diagnostician`) : passe au labo les tests unitaires. Il vérifie leur qualité, leur pertinence, leur robustesse et leur maintenabilité.
+- **Le Radiologue de l'Architecture** (`zone-of-pain`) : passe le dépôt aux rayons X de l'historique git. Il repère les zones de douleur (churn, couplage, couplage temporel) et priorise les fichiers à refactorer.
 
 ### La commande /checkup
 
