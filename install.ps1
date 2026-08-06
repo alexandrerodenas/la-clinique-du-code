@@ -15,11 +15,12 @@ if (-not (Test-Path -LiteralPath $opencodeConfig)) {
     New-Item -ItemType Directory -Path $opencodeConfig -Force | Out-Null
 }
 
-Write-Host "  ➜ Installation du Thérapeute du Code (code-therapist)..."
-Copy-Item -LiteralPath (Join-Path $repoRoot "skills\code-therapist") -Destination (Join-Path $skillsTarget "code-therapist") -Recurse -Force
-
-Write-Host "  ➜ Installation du Diagnosticien des Tests (test-diagnostician)..."
-Copy-Item -LiteralPath (Join-Path $repoRoot "skills\test-diagnostician") -Destination (Join-Path $skillsTarget "test-diagnostician") -Recurse -Force
+Write-Host "  ➜ Installation des praticiens (skills)..."
+New-Item -ItemType Directory -Path $skillsTarget -Force | Out-Null
+Get-ChildItem -LiteralPath (Join-Path $repoRoot "skills") -Directory | ForEach-Object {
+    Write-Host "    - $($_.Name)"
+    Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $skillsTarget $_.Name) -Recurse -Force
+}
 
 Write-Host "  ➜ Installation de la commande /checkup..."
 New-Item -ItemType Directory -Path $commandsTarget -Force | Out-Null
