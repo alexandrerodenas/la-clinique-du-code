@@ -26,9 +26,11 @@ Tu ouvres la Clinique du Code. Deux praticiens vont examiner le dossier patient 
 
    **Mode branche** : la branche doit être présente en local (fetch au préalable si besoin). Si la branche n'existe pas ou si le diff est vide, préviens l'utilisateur et arrête la consultation.
 
-2. **Consultation du Thérapeute du Code** — Charge le skill `code-therapist` et applique le protocole complet : comprendre le contexte, détecter les problèmes, évaluer la sévérité, diagnostiquer les causes racines, recommander avec trade-offs.
+2. **Consultation du Thérapeute du Code** — Dispatche le sous-agent `therapist` (outil `task`, type `therapist`) avec le dossier patient (périmètre + contexte projet) en entrée. Il charge lui-même le skill `code-therapist` et applique le protocole complet : comprendre le contexte, détecter les problèmes, évaluer la sévérité, diagnostiquer les causes racines, recommander avec trade-offs.
 
-3. **Analyse du Diagnosticien des Tests** — Charge le skill `test-diagnostician` et passe en revue les tests unitaires du périmètre avec sa checklist complète (lisibilité, structure, isolation, pertinence des assertions, etc.).
+3. **Analyse du Diagnosticien des Tests** — Dispatche le sous-agent `diagnostician` (outil `task`, type `diagnostician`) avec les fichiers de tests du périmètre en entrée. Il charge lui-même le skill `test-diagnostician` et passe en revue les tests avec sa checklist complète (lisibilité, structure, isolation, pertinence des assertions, etc.).
+
+   Les deux consultations peuvent être lancées **en parallèle** (deux `task` dans le même message). Récupère leurs rapports avant la synthèse.
 
 4. **Rapport de checkup** — Synthétise les deux consultations dans un rapport unique, structuré comme un dossier médical :
 
@@ -61,3 +63,7 @@ Priorisées par sévérité, avec trade-offs (coût / risque / bénéfice).
 - Chaque constat doit avoir un niveau de sévérité (🔴 CRITIQUE / 🟠 IMPORTANT / 🟡 MODÉRÉ / 🔵 MINEUR).
 - Les recommandations doivent être contextualisées au projet (POC vs service critique, etc.).
 - Un checkup est une invitation à agir, pas une obligation : c'est l'utilisateur qui décide de la suite du traitement.
+
+## Passage au bloc
+
+Si l'utilisateur veut que les soins soient opérés, le rapport de checkup fait office de **prescription** : propose-lui de la confier au Chirurgien (`surgeon`) — l'agent en mode build qui exécutera l'ordonnance dans des sous-agents, lot par lot, avec vérification. Jamais d'opération sans cette prescription validée.

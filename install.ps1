@@ -7,6 +7,7 @@ $repoRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $opencodeConfig = Join-Path $env:USERPROFILE ".config\opencode"
 $skillsTarget = Join-Path $opencodeConfig "skills"
 $commandsTarget = Join-Path $opencodeConfig "commands"
+$agentsTarget = Join-Path $opencodeConfig "agent"
 
 Write-Host "`n🏥  La Clinique du Code — Installation`n" -ForegroundColor Cyan
 
@@ -20,6 +21,13 @@ New-Item -ItemType Directory -Path $skillsTarget -Force | Out-Null
 Get-ChildItem -LiteralPath (Join-Path $repoRoot "skills") -Directory | ForEach-Object {
     Write-Host "    - $($_.Name)"
     Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $skillsTarget $_.Name) -Recurse -Force
+}
+
+Write-Host "  ➜ Installation des agents (plan + chirurgien)..."
+New-Item -ItemType Directory -Path $agentsTarget -Force | Out-Null
+Get-ChildItem -LiteralPath (Join-Path $repoRoot "agents") -File -Filter "*.md" | ForEach-Object {
+    Write-Host "    - $($_.BaseName)"
+    Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $agentsTarget $_.Name) -Force
 }
 
 Write-Host "  ➜ Installation de la commande /checkup..."

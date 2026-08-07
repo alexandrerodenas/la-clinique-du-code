@@ -2,28 +2,36 @@
 
 ## 🏥 La Clinique du Code
 
-Ce projet est équipé de la Clinique du Code, un plugin pour opencode qui offre des praticiens (skills) et la commande `/checkup`.
+Ce projet est équipé de la Clinique du Code, un plugin pour opencode qui offre des praticiens (agents + skills) et la commande `/checkup`.
 
 ### Praticiens disponibles
 
-- **Le Thérapeute du Code** (`code-therapist`) : examine la qualité du code, son architecture, son refactorabilité. Il détecte les vrais problèmes, diagnostique les causes racines et recommande des soins avec des trade-offs explicites.
-- **Le Diagnosticien des Tests** (`test-diagnostician`) : passe au labo les tests unitaires. Il vérifie leur qualité, leur pertinence, leur robustesse et leur maintenabilité.
-- **Le Radiologue de l'Architecture** (`zone-of-pain`) : passe le dépôt aux rayons X de l'historique git. Il repère les zones de douleur (churn, couplage, couplage temporel) et priorise les fichiers à refactorer.
-- **Le Nutritionniste du Projet** (`nutritionist`) : vérifie que le code écrit est nécessaire. Il détecte le code mort, la spéculation (YAGNI), la sur-ingénierie et le sur-dimensionnement par rapport aux usages réels.
+Les praticiens diagnostiques sont des **agents en mode plan** (diagnostic seul, jamais de modification). Ils s'appuient sur des skills :
+
+- **Le Thérapeute du Code** (agent `therapist`, skill `code-therapist`) : examine la qualité du code, son architecture, son refactorabilité. Il détecte les vrais problèmes, diagnostique les causes racines et recommande des soins avec des trade-offs explicites.
+- **Le Diagnosticien des Tests** (agent `diagnostician`, skill `test-diagnostician`) : passe au labo les tests unitaires. Il vérifie leur qualité, leur pertinence, leur robustesse et leur maintenabilité.
+- **Le Radiologue de l'Architecture** (agent `radiologist`, skill `zone-of-pain`) : passe le dépôt aux rayons X de l'historique git. Il repère les zones de douleur (churn, couplage, couplage temporel) et priorise les fichiers à refactorer.
+- **Le Nutritionniste du Projet** (agent `nutritionist`, skill `nutritionist`) : vérifie que le code écrit est nécessaire. Il détecte le code mort, la spéculation (YAGNI), la sur-ingénierie et le sur-dimensionnement par rapport aux usages réels.
+
+Le seul praticien en **mode build** (capable de modifier le code) :
+
+- **Le Chirurgien** (agent `surgeon`) : opère uniquement sur prescription — un bilan d'un praticien validé par l'utilisateur. Il exécute l'ordonnance dans des sous-agents, lot par lot, avec vérification. N'opère jamais sans prescription.
 
 ### La commande /checkup
 
-`/checkup` lance une consultation complète : le Thérapeute du Code et le Diagnosticien des Tests examinent le code et les tests, puis produisent un rapport clinique avec verdict et ordonnance.
+`/checkup` lance une consultation complète : il dispatche le Thérapeute du Code et le Diagnosticien des Tests (sous-agents en parallèle) qui examinent le code et les tests, puis produit un rapport clinique avec verdict et ordonnance.
 
 ### Le parcours de soins
 
 - `/checkup` est le **bilan du généraliste** : la consultation d'entrée, à proposer en premier.
-- **Le Radiologue prépare le terrain** (`zone-of-pain`) : sa radio désigne les fichiers qui saignent (churn + couplage). Il dit au généraliste *où regarder* — utile avant ou pendant un checkup.
+- **Le Radiologue prépare le terrain** (`radiologist`) : sa radio désigne les fichiers qui saignent (churn + couplage). Il dit au généraliste *où regarder* — utile avant ou pendant un checkup.
 - **Le Nutritionniste complète le bilan** (`nutritionist`) : après un checkup, il vérifie que le code sain mais suspect **devrait** exister (code mort, sur-ingénierie, dosage). Le Thérapeute lui transmet les constats de nécessité croisés au passage.
-- Parcours typique : radio → checkup → nutritionniste. Chaque expert reste consultable seul, à la demande.
+- **Le Chirurgien opère** (`surgeon`) : une fois la prescription validée, il exécute l'ordonnance dans des sous-agents. Jamais d'opération sans bilan validé.
+- Parcours typique : radio → checkup → nutritionniste → chirurgien. Chaque expert reste consultable seul, à la demande.
 
 ### Philosophie : 100 % manuel
 
 - Les checkups sont **à la discrétion de l'utilisateur**. Ne lance jamais un checkup de toi-même.
 - Après un développement significatif (nouvelle feature, refactoring, correction), tu **peux inviter** l'utilisateur à lancer un checkup : propose-lui `/checkup` en une phrase, il décide.
 - En fin d'itération, si des tests ont été écrits et que l'utilisateur est d'accord, le checkup est recommandé avant la recette et le commit.
+- Seul le Chirurgien modifie le code, et uniquement sur prescription validée. Les praticiens en mode plan ne touchent jamais au code.
