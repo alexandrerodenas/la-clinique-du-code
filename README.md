@@ -103,6 +103,7 @@ Une commande, deux praticiens, un rapport.
 ```bash
 /checkup                      # tout le travail de la session courante
 /checkup src/services         # un périmètre précis
+/checkup branch:feature/xyz   # les diffs d'une branche vs la base
 ```
 
 `/checkup` ouvre le dossier patient, puis :
@@ -221,6 +222,7 @@ Ce prompt fonctionne sur n'importe quel assistant de code disposant d'un shell
 ```bash
 /checkup                                # consultation sur le travail de la session
 /checkup <chemin>                       # consultation sur un périmètre précis
+/checkup branch:<branche>               # consultation sur les diffs d'une branche (vs la base)
 ```
 
 Une radio du dépôt se prescrit à part, quand vous en avez besoin :

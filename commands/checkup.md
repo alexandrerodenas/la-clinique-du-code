@@ -1,5 +1,5 @@
 ---
-description: Checkup complet de la Clinique du Code. Le Thérapeute du Code examine le code, le Diagnosticien des Tests examine les tests. Produit un rapport clinique avec verdict.
+description: Checkup complet de la Clinique du Code. Le Thérapeute du Code examine le code, le Diagnosticien des Tests examine les tests. Périmètre : working tree, chemin, ou branche (diffs). Produit un rapport clinique avec verdict.
 agent: build
 ---
 
@@ -12,10 +12,19 @@ Tu ouvres la Clinique du Code. Deux praticiens vont examiner le dossier patient 
 
 ## Protocole de checkup
 
-1. **Préparation du dossier patient** — Identifie clairement :
-   - Les fichiers de code source concernés (nouveaux ou modifiés)
+1. **Préparation du dossier patient** — Identifie clairement le périmètre :
+   - **Working tree / chemin** : `checkup` ou `checkup src/services` → les fichiers du working tree (nouveaux ou modifiés)
+   - **Branche** : `checkup branch:<nom>` → les fichiers modifiés par la branche par rapport à la branche de base
    - Les fichiers de tests associés
    - Le type de projet et son contexte (calibrage nécessaire pour les praticiens)
+
+   Pour le **mode branche** :
+   - Détermine la base : la branche par défaut du remote (`git remote show origin`, ou `origin/HEAD`)
+   - Liste les fichiers concernés : `git diff --name-only <base>...<branche>`
+   - Récupère les diffs : `git diff <base>...<branche>`
+   - Les praticiens analysent ces diffs (le contexte local peut compléter la lecture si un fichier manque de contexte)
+
+   **Mode branche** : la branche doit être présente en local (fetch au préalable si besoin). Si la branche n'existe pas ou si le diff est vide, préviens l'utilisateur et arrête la consultation.
 
 2. **Consultation du Thérapeute du Code** — Charge le skill `code-therapist` et applique le protocole complet : comprendre le contexte, détecter les problèmes, évaluer la sévérité, diagnostiquer les causes racines, recommander avec trade-offs.
 
