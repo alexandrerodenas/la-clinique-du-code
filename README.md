@@ -3,7 +3,7 @@
 > Prenez soin de votre code. Il prendra soin de votre santé mentale.
 
 ![Harness](https://img.shields.io/badge/harness-opencode-18181B?logo=opencode&logoColor=white)
-![Praticiens](https://img.shields.io/badge/praticiens-3-success)
+![Praticiens](https://img.shields.io/badge/praticiens-4-success)
 ![Mode](https://img.shields.io/badge/mode-100%25%20manuel-important)
 ![Checkup](https://img.shields.io/badge/checkup-pr%C3%AAt-blue)
 ![Langue](https://img.shields.io/badge/langue-Fran%C3%A7ais-9cf)
@@ -93,6 +93,24 @@ qui bougent toujours ensemble (couplage temporel).
 
 La radio se prescrit à la demande — c'est lui qui désigne les patients prioritaires
 du Thérapeute.
+
+### 🥗 Le Nutritionniste du Projet — `nutritionist`
+
+> « Vous mangez trop. Certaines portions, vous ne les mangez même pas. »
+
+Le Nutritionniste du Projet est votre **spécialiste de la nécessité**. Il ne juge ni
+l'optimisation, ni le nombre de lignes : il vérifie que tout le code écrit est
+**nécessaire** et dimensionné aux usages réels.
+
+| Analyses | Verdicts |
+|---|---|
+| Code mort (fichiers orphelins, exports sans référence, endpoints sans consommateurs) | ✅ Régime équilibré |
+| Spéculation YAGNI (abstractions à 1 usage, généricité anticipée, feature flags inertes) | ⚠️ Régime à surveiller |
+| Réinvention de roue (réimplémentation de l'existant) | ❌ Régime à revoir |
+| Dosage (complexité écrite vs complexité réelle du domaine) | |
+
+Il ne statue jamais sans connaître les usages : il questionne d'abord, diagnostique
+ensuite. Et comme toute la clinique, il prescrit — il n'opère pas.
 
 ---
 
@@ -267,7 +285,6 @@ spécialistes potentiels :
 | 🛡️ Le Garde-Fou de la Sécurité | analyse des vulnérabilités, secrets, injection |
 | ⚡ Le Kiné des Performances | analyses N+1, complexité algorithmique, cache |
 | ♿ Le Docteur de l'Accessibilité | WCAG, usages handicapés |
-| 📦 Le Diététicien des Dépendances | poids, obsolescence, licenses |
 
 Un repo ouvert à la contribution : vous pouvez proposer un nouveau praticien en créant
 un skill dans `skills/<nom>/SKILL.md` et sa fiche dans ce README.
