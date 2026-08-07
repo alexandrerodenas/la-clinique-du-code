@@ -15,6 +15,13 @@ Ce projet est équipé de la Clinique du Code, un plugin pour opencode qui offre
 
 `/checkup` lance une consultation complète : le Thérapeute du Code et le Diagnosticien des Tests examinent le code et les tests, puis produisent un rapport clinique avec verdict et ordonnance.
 
+### Le parcours de soins
+
+- `/checkup` est le **bilan du généraliste** : la consultation d'entrée, à proposer en premier.
+- **Le Radiologue prépare le terrain** (`zone-of-pain`) : sa radio désigne les fichiers qui saignent (churn + couplage). Il dit au généraliste *où regarder* — utile avant ou pendant un checkup.
+- **Le Nutritionniste complète le bilan** (`nutritionist`) : après un checkup, il vérifie que le code sain mais suspect **devrait** exister (code mort, sur-ingénierie, dosage). Le Thérapeute lui transmet les constats de nécessité croisés au passage.
+- Parcours typique : radio → checkup → nutritionniste. Chaque expert reste consultable seul, à la demande.
+
 ### Philosophie : 100 % manuel
 
 - Les checkups sont **à la discrétion de l'utilisateur**. Ne lance jamais un checkup de toi-même.

@@ -33,8 +33,13 @@ flowchart TD
     D -->|examine les tests| R
     R -->|propose les soins| U
     U -->|"radio du dépôt"| X["🩻 Radiologue de l'Architecture<br/><i>zone-of-pain</i>"]
+    X -->|"prépare le terrain"| C
     X -->|churn + couplage| M["🩻 Compte rendu radiologique<br/>hotspots priorisés"]
     M -->|candidats au refactoring| U
+    U -->|"consultation nutritionnelle"| N["🥗 Nutritionniste du Projet<br/><i>nutritionist</i>"]
+    N -->|"complète le bilan"| R
+    N -->|"code superflu"| P["🥗 Rapport nutritionnel<br/>nécessité + dosage"]
+    P -->|"régime à suivre"| U
 ```
 
 ---
@@ -134,6 +139,32 @@ Une commande, deux praticiens, un rapport.
 > ⚠️ Règle d'or de la clinique : **aucune opération pendant un checkup**. Les
 > praticiens diagnostiquent et prescrivent. L'opération (le refactoring) ne se fait
 > qu'avec l'accord explicite du patient — l'utilisateur.
+
+---
+
+## 🧭 Le parcours de soins
+
+Le généraliste et les experts ne travaillent pas en parallèle : ils s'organisent.
+
+- **`/checkup` est le bilan du généraliste** — la consultation d'entrée, le premier
+  réflexe. Le Thérapeute et le Diagnosticien examinent le code et les tests, et
+  orientent vers les spécialistes quand ils le jugent utile.
+- **🩻 Le Radiologue prépare le terrain** — avant ou pendant un checkup, sa radio
+  désigne les fichiers qui saignent (churn + couplage). C'est lui qui dit au
+  généraliste *où regarder*.
+- **🥗 Le Nutritionniste complète le bilan** — quand le checkup montre du code sain
+  mais suspect, il vérifie que ce code **devrait** exister (code mort, sur-ingénierie,
+  dosage). Le Thérapeute lui transmet les constats de nécessité croisés au passage.
+
+Un parcours typique :
+
+```
+🩻 radio (où ça fait mal ?) → 🧑‍⚕️ checkup (bilan généraliste) → 🥗 nutritionniste (ce code doit-il exister ?)
+```
+
+Chaque expert reste consultable **seul**, à la demande — le parcours est une
+suggestion, pas un protocole imposé. Et la règle d'or s'applique partout : on
+diagnostique, on prescrit, on n'opère jamais sans l'accord du patient.
 
 ---
 
