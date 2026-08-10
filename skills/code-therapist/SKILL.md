@@ -53,17 +53,6 @@ Ce ne sont pas des slogans. Ce sont des ancrages décisionnels. Quand les règle
 7. **La duplication est parfois acceptable** — un DRY prématuré est pire qu'une duplication temporaire.
 8. **Montrez du code quand c'est possible** — un avis abstrait sans exemple concret ne vaut rien.
 
-## Pratiques concrètes
-
-Ces règles s'appliquent partout où le contexte du projet les autorise. Elles ne sont pas dogmatiques — un POC de 50 lignes peut s'en affranchir. Mais dans un codebase actif, un thérapeute qui les ignore livre un diagnostic incomplet.
-
-- **Nettoyage post-refactoring systématique** — dès qu'on modifie du code, on supprime immédiatement les imports et références inutilisés qui en deviennent obsolètes. Laisser du code mort après une modification est un refus de nettoyer sa propre trace.
-- **Imports explicites** — préférer des imports explicites aux noms pleinement qualifiés dans le code courant. Un import clair est plus lisible qu'un `com.exemple.module.submodule.Type` éparpillé dans la signature.
-- **Fakes réutilisables dans les tests** — éviter les implémentations anonymes répétées. Créer des fakes configurables et réutilisables. Une fake qu'on recrée à chaque test est un test fragile ; une fake partagée et documentée est un asset.
-- **Types métier dans les DTO** — utiliser les types métier directement dans les DTO lorsque le format d'entrée est compatible. Ne pas décomposer un `LocalDate` en trois champs `year`, `month`, `day` dans un DTO si la requête ou la réponse contient déjà la date complète.
-- **Parsing centralisé avec erreurs explicites** — centraliser les règles de parsing au niveau de la frontière applicative et produire des erreurs explicites. Ne pas laisser le parsing se disséminer dans la logique métier avec des exceptions silencieuses.
-- **Tests aux frontières** — tester systématiquement les comportements aux limites : valeur absente, valeur vide, doublon, casse, espaces, valeur inconnue. Un test sur la valeur normale ne prouve rien si les cas frontières ne sont pas couverts.
-
 ## Calibrage selon le contexte du projet
 
 Avant de diagnostiquer, classez le projet. Cela ajuste vos seuils de sévérité et vos recommandations.
@@ -466,6 +455,12 @@ Gardez cette connaissance compacte sous la main. Ne la déversez pas dans vos r�
 - **Obsession primitive** — chaînes/nombres au lieu de types métier
 - **Changement divergent** — une classe change pour plusieurs raisons sans lien
 - **Chirurgie au fusil** — un changement dispersé sur de nombreux fichiers
+- **Imports fantômes** — imports et références inutilisés après refactoring, laissés derrière sans nettoyage
+- **Qualifiés éparpillés** — `package.module.Type` dans les signatures au lieu d'imports explicites
+- **Fake duplicatée** — implémentations anonymes répétées dans les tests au lieu de fakes configurables partagées
+- **DTO fragmenté** — type métier décomposé en champs triviaux alors que le format d'entrée le permet tel quel
+- **Parsing disséminé** — règles de parsing éclatées dans la logique métier au lieu d'être centralisées à la frontière applicative avec des erreurs explicites
+- **Frontières aveugles** — tests uniquement sur la valeur normale, sans couverture des cas limites (absent, vide, doublon, casse, espaces, inconnu)
 
 ### Patterns majeurs (à n'utiliser que quand les problèmes l'exigent)
 
