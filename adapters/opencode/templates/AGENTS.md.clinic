@@ -2,7 +2,7 @@
 
 ## 🏥 La Clinique du Code
 
-Ce projet est équipé de la Clinique du Code, un plugin pour opencode qui offre des praticiens (agents + skills) et la commande `/checkup`.
+Ce projet utilise la Clinique du Code via son adaptateur OpenCode. Les principes et protocoles portables sont conservés dans le dépôt de la Clinique ; cet adaptateur fournit les agents, les skills et la commande `/checkup`.
 
 ### Praticiens disponibles
 

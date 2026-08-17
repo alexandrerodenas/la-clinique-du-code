@@ -1,6 +1,9 @@
 # 🧭 Utilisation
 
-## La commande `/checkup`
+## La commande `/checkup` dans OpenCode
+
+Cette commande est fournie par l'adaptateur OpenCode. Le protocole de checkup
+reste réutilisable par d'autres intégrations.
 
 Une commande, deux praticiens, un rapport.
 

@@ -14,13 +14,15 @@ Imagerie médicale du dépôt : avant toute consultation, une radio du projet r�
 
 ## Protocole d'imagerie
 
-Depuis la racine du projet analysé (workdir = racine du repo) :
+Depuis la racine du projet analysé :
 
 ```bash
-node <base-du-skill>/zone-of-pain-analyzer.js
+node <chemin-vers-zone-of-pain-analyzer.js>
 ```
 
-`<base-du-skill>` est le dossier du skill (celui qui contient `zone-of-pain-analyzer.js`). Le script s'exécute dans le repo analysé, pas dans le dossier du skill.
+Le chemin de l'analyseur est fourni par l'intégration utilisée. Le script
+s'exécute depuis la racine du dépôt analysé, pas depuis le dossier qui contient
+l'analyseur.
 
 Exigences : Node.js >= 14, aucun `npm install` nécessaire.
 

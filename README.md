@@ -2,7 +2,7 @@
 
 > Prenez soin de votre code. Il prendra soin de votre santé mentale.
 
-![Harness](https://img.shields.io/badge/harness-opencode-18181B?logo=opencode&logoColor=white)
+![Approche](https://img.shields.io/badge/approche-core%20portable%20%2B%20adaptateurs-18181B)
 ![Praticiens](https://img.shields.io/badge/praticiens-5-success)
 ![Mode](https://img.shields.io/badge/mode-100%25%20manuel-important)
 ![Checkup](https://img.shields.io/badge/checkup-pr%C3%AAt-blue)
@@ -74,11 +74,20 @@ validée.
 
 ---
 
+## 🧩 Architecture
+
+La Clinique est organisée en deux couches :
+
+- `core/` contient les principes, protocoles et outils indépendants d'un harnais ;
+- `adapters/` contient les intégrations propres à chaque assistant de code.
+
+L'adaptateur OpenCode est fourni dans `adapters/opencode/`. D'autres adaptateurs
+peuvent traduire les mêmes protocoles dans leur propre format.
+
 ## 📦 Installation
 
-Voir [**docs/installation.md**](docs/installation.md) — prérequis, installation
-Windows (PowerShell) et Linux/macOS (manuel), installation du système prompt, et
-prompt d'installation from scratch par un agent de code.
+Voir [**docs/installation.md**](docs/installation.md) — installation de l'adaptateur
+OpenCode et utilisation du cœur portable.
 
 ## 🧭 Utilisation
 
