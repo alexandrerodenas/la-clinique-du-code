@@ -7,8 +7,8 @@ Le dossier `core/` contient les éléments indépendants d'un harnais d'agent :
 - les principes de fonctionnement de la Clinique.
 
 Un adaptateur est responsable de traduire ces protocoles dans le format attendu
-par un assistant de code. L'adaptateur OpenCode se trouve dans
-`adapters/opencode/`.
+par un assistant de code. Les adaptateurs OpenCode et GitHub Copilot se trouvent
+respectivement dans `adapters/opencode/` et `adapters/copilot/`.
 
 Les protocoles ne supposent ni commande particulière, ni outil de délégation,
 ni permission spécifique. L'orchestrateur qui les utilise doit garantir les

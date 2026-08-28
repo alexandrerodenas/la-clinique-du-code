@@ -4,14 +4,14 @@
 
 Le cœur portable se trouve dans `core/`. Il contient les protocoles des
 praticiens et l'analyseur de zones de douleur. Les fichiers spécifiques à
-OpenCode sont regroupés dans `adapters/opencode/`.
+les assistants sont regroupés dans `adapters/`.
 
 Cette page documente l'installation de cet adaptateur. Un autre assistant peut
 réutiliser `core/` en fournissant sa propre intégration.
 
 ## Prérequis
 
-- [OpenCode](https://opencode.ai) installé et fonctionnel pour l'adaptateur décrit ici
+- [OpenCode](https://opencode.ai) ou [GitHub Copilot dans VS Code](https://code.visualstudio.com/docs/copilot/overview), selon l'adaptateur choisi
 
 ## Étape 1 — Cloner la clinique
 
@@ -42,6 +42,22 @@ jamais l'imposer.
 ## Étape 4 — Redémarrer OpenCode
 
 La configuration est chargée au démarrage. Quittez et relancez OpenCode.
+
+## GitHub Copilot dans VS Code
+
+Depuis la racine de la Clinique, installez l'adaptateur dans le projet cible :
+
+```powershell
+.\adapters\copilot\install.ps1 -ProjectRoot C:\chemin\du\projet
+```
+
+L'adaptateur installe les protocoles dans `.github/skills/`, les agents dans
+`.github/agents/`, le prompt `/checkup` dans `.github/prompts/` et les instructions
+globales dans `.github/copilot-instructions.md`.
+
+Dans le projet cible, ouvrez le chat Copilot puis lancez `/checkup`. Les agents
+diagnostiques restent en lecture seule ; seul le Chirurgien peut modifier le code,
+après prescription et consentement explicites.
 
 ---
 

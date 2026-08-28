@@ -1,9 +1,13 @@
 # 🧭 Utilisation
 
-## La commande `/checkup` dans OpenCode
+## La commande `/checkup`
 
-Cette commande est fournie par l'adaptateur OpenCode. Le protocole de checkup
-reste réutilisable par d'autres intégrations.
+Cette commande est fournie par les adaptateurs OpenCode et GitHub Copilot dans
+VS Code. Le protocole de checkup reste réutilisable par d'autres intégrations.
+
+Dans OpenCode, elle est installée comme commande. Dans VS Code, elle est fournie
+par le prompt file `.github/prompts/checkup.prompt.md` et apparaît dans le chat
+Copilot comme une commande slash.
 
 Une commande, deux praticiens, un rapport.
 
