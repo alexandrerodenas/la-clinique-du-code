@@ -23,6 +23,13 @@ Un bon test unitaire doit respecter ces propriétés :
 * **Auto-validant** : Indique explicitement s'il passe ou échoue, sans exiger d'analyse manuelle des logs.
 * **Ciblé** : Vise une seule unité de comportement ou de logique métier.
 
+Un test **tautologique** est considéré comme **harmful** : il vérifie une
+proposition toujours vraie, ou compare le résultat à une valeur reconstruite
+avec la même logique que le code de production. Il peut passer tout en ne
+détectant aucune régression et donne donc une fausse confiance dans la suite.
+Le diagnosticien doit le signaler systématiquement, avec au minimum une
+sévérité **🟠 IMPORTANT**, même si la couverture affichée augmente.
+
 ## Structure de test : pattern Given-When-Then
 
 Un test de qualité sépare clairement les phases de mise en place, d'exécution et de vérification avec des sauts de ligne propres, **sans utiliser de commentaires** pour définir les sections.
@@ -67,6 +74,7 @@ Utilisez cette procédure rigoureuse pour vérifier chaque test unitaire pendant
 * [ ] **Mutualisation des assets / réutilisabilité du setup** : Les assets de test (doubles de test, builders, fixtures) sont-ils efficacement réutilisés au niveau de la classe ? Le setup partagé trouve-t-il le bon équilibre, maximisant la réutilisation sans introduire un couplage trop fort qui obscurcit les blocs de setup et masque le contexte des tests individuels ?
 * [ ] **Fragilité / isolation** : Le test est-il exempt de dépendances implicites (variables globales, vraies dépendances externes) ? Ne devrait-il échouer *uniquement* si le comportement métier change ?
 * [ ] **Pertinence des assertions (*ne jamais faire confiance à un test qu'on n'a pas vu échouer*)** : L'assertion est-elle pertinente et d'une complexité appropriée (ni trop simpliste, ni trop alambiquée) ? Êtes-vous absolument certain que le test échouerait si le code de production était modifié incorrectement ?
+* [ ] **Absence de tautologie** : Le test vérifie-t-il un résultat indépendant de l'implémentation testée, sans recopier sa logique ni comparer une valeur à elle-même ? Tout test tautologique doit être marqué **harmful** et faire l'objet d'un constat.
 
 ## Format de sortie
 
