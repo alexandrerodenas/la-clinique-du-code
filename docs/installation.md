@@ -43,7 +43,7 @@ jamais l'imposer.
 
 La configuration est chargée au démarrage. Quittez et relancez OpenCode.
 
-## GitHub Copilot dans VS Code
+## Application GitHub Copilot et GitHub Copilot dans VS Code
 
 Depuis la racine de la Clinique, installez l'adaptateur dans le projet cible :
 
@@ -51,13 +51,16 @@ Depuis la racine de la Clinique, installez l'adaptateur dans le projet cible :
 .\adapters\copilot\install.ps1 -ProjectRoot C:\chemin\du\projet
 ```
 
-L'adaptateur installe les protocoles dans `.github/skills/`, les agents dans
-`.github/agents/`, le prompt `/checkup` dans `.github/prompts/` et les instructions
-globales dans `.github/copilot-instructions.md`.
+L'adaptateur installe les protocoles dans `.github/skills/`, l'extension native
+dans `.github/extensions/la-clinique-du-code/extension.mjs`, les agents dans
+`.github/agents/`, le prompt `/checkup` dans `.github/prompts/` et les
+instructions globales dans `.github/copilot-instructions.md`.
 
-Dans le projet cible, ouvrez le chat Copilot puis lancez `/checkup`. Les agents
-diagnostiques restent en lecture seule ; seul le Chirurgien peut modifier le code,
-après prescription et consentement explicites.
+Dans l'application GitHub Copilot, l'outil `clinic_checkup` lance le diagnostic
+et la saisie `/checkup` est reconnue par l'extension. Dans VS Code, le prompt
+`.github/prompts/checkup.prompt.md` fournit la commande `/checkup`. Les agents
+diagnostiques restent en lecture seule ; seul le Chirurgien peut modifier le
+code, après prescription et consentement explicites.
 
 ---
 

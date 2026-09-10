@@ -1,9 +1,12 @@
 # Adaptateur GitHub Copilot
 
 Cet adaptateur traduit les protocoles portables de `core/` dans les conventions
-de GitHub Copilot :
+de GitHub Copilot. Il prend en charge l'application GitHub Copilot et GitHub
+Copilot dans VS Code :
 
 - `.github/skills/` pour les protocoles des praticiens ;
+- `.github/extensions/la-clinique-du-code/extension.mjs` pour le plugin natif
+  de l'application GitHub Copilot ;
 - `.github/agents/` pour les praticiens spécialisés ;
 - `.github/prompts/checkup.prompt.md` pour le checkup manuel ;
 - `.github/agents/checkup.agent.md` pour coordonner les consultations ;
@@ -24,5 +27,7 @@ Depuis la racine de la Clinique :
 Le script crée ou met à jour uniquement les fichiers de la Clinique dans le
 projet cible. Il ne lance pas de consultation automatiquement.
 
-Dans VS Code avec GitHub Copilot, le prompt apparaît comme la commande `/checkup`
-dans le chat. Les agents apparaissent dans le sélecteur d'agents.
+Dans l'application GitHub Copilot, l'extension expose l'outil
+`clinic_checkup`. Elle accepte aussi `/checkup` dans le chat via un hook de
+prompt. Dans VS Code avec GitHub Copilot, le prompt apparaît comme la commande
+`/checkup` et les agents apparaissent dans le sélecteur d'agents.

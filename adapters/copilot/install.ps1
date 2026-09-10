@@ -16,7 +16,8 @@ Write-Host "`n🏥 La Clinique du Code — Adaptateur GitHub Copilot`n" -Foregro
 $skillsTarget = Join-Path $githubRoot "skills"
 $agentsTarget = Join-Path $githubRoot "agents"
 $promptsTarget = Join-Path $githubRoot "prompts"
-New-Item -ItemType Directory -Path $skillsTarget, $agentsTarget, $promptsTarget -Force | Out-Null
+$extensionsTarget = Join-Path $githubRoot "extensions\la-clinique-du-code"
+New-Item -ItemType Directory -Path $skillsTarget, $agentsTarget, $promptsTarget, $extensionsTarget -Force | Out-Null
 
 Write-Host "  ➜ Installation des protocoles comme skills..."
 Get-ChildItem -LiteralPath (Join-Path $repoRoot "core\protocols") -File -Filter "*.md" | ForEach-Object {
@@ -36,5 +37,6 @@ Get-ChildItem -LiteralPath (Join-Path $adapterRoot "agents") -File -Filter "*.ag
 
 Copy-Item -LiteralPath (Join-Path $adapterRoot "prompts\checkup.prompt.md") -Destination (Join-Path $promptsTarget "checkup.prompt.md") -Force
 Copy-Item -LiteralPath (Join-Path $adapterRoot "templates\copilot-instructions.md") -Destination (Join-Path $githubRoot "copilot-instructions.md") -Force
+Copy-Item -LiteralPath (Join-Path $adapterRoot "extensions\la-clinique-du-code\extension.mjs") -Destination (Join-Path $extensionsTarget "extension.mjs") -Force
 
 Write-Host "`n  ✅ Installation terminée. Utilisez le prompt /checkup ou un agent de la Clinique.`n" -ForegroundColor Green
