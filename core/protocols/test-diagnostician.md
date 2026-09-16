@@ -17,7 +17,7 @@ Pendant la phase post-développement, une fois la tâche de codage terminée. L'
 
 Un bon test unitaire doit respecter ces propriétés :
 
-* **Rapide** : S'exécute en quelques millisecondes pour permettre l'intégration continue et un retour rapide.
+* **Rapide** : S'exécute en quelques millisecondes pour permettre l'intégration continue et un retour rapide. Tout test qui dépasse 5 secondes doit être signalé comme anomalie de performance, avec sa durée et son impact.
 * **Indépendant** : Ne dépend pas de l'état d'un autre test ni de son ordre d'exécution.
 * **Répétable** : Donne le même résultat à chaque exécution, quelles que soient les conditions d'environnement.
 * **Auto-validant** : Indique explicitement s'il passe ou échoue, sans exiger d'analyse manuelle des logs.
@@ -75,6 +75,7 @@ Utilisez cette procédure rigoureuse pour vérifier chaque test unitaire pendant
 * [ ] **Fragilité / isolation** : Le test est-il exempt de dépendances implicites (variables globales, vraies dépendances externes) ? Ne devrait-il échouer *uniquement* si le comportement métier change ?
 * [ ] **Pertinence des assertions (*ne jamais faire confiance à un test qu'on n'a pas vu échouer*)** : L'assertion est-elle pertinente et d'une complexité appropriée (ni trop simpliste, ni trop alambiquée) ? Êtes-vous absolument certain que le test échouerait si le code de production était modifié incorrectement ?
 * [ ] **Absence de tautologie** : Le test vérifie-t-il un résultat indépendant de l'implémentation testée, sans recopier sa logique ni comparer une valeur à elle-même ? Tout test tautologique doit être marqué **harmful** et faire l'objet d'un constat.
+* [ ] **Durée d'exécution** : Les tests unitaires pertinents ont-ils été exécutés ? Les tests individuels dépassant 5 secondes, les suites lentes, les timeouts et les blocages sont-ils identifiés avec leur durée et leur cause probable ?
 
 ## Format de sortie
 

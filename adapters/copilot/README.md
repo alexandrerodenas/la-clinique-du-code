@@ -31,7 +31,9 @@ Dans l'application GitHub Copilot, l'extension enregistre la vraie commande
 `/checkup` (avec son argument de périmètre) et expose aussi l'outil
 `clinic_checkup` pour les hôtes qui ne présentent pas les commandes natives.
 Le runtime orchestre alors les sous-agents visibles `therapist` et
-`diagnostician`; `surgeon` est disponible uniquement sur invocation explicite,
+`diagnostician`. Le Diagnosticien peut lancer les tests unitaires en lecture
+seule et signale tout test dépassant 5 secondes, ainsi que les timeouts et
+blocages. `surgeon` est disponible uniquement sur invocation explicite,
 avec prescription et consentement. Aucun champ `model` n'est envoyé : chaque
 sous-agent hérite du modèle de la session parente.
 

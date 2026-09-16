@@ -30,11 +30,11 @@ const customAgents = [
         name: "diagnostician",
         displayName: "Diagnosticien des Tests",
         description:
-            "Evalue la pertinence et la robustesse des tests unitaires en lecture seule.",
-        tools: ["grep", "glob", "view"],
+            "Evalue et execute les tests unitaires en lecture seule, en detectant les tests lents.",
+        tools: ["grep", "glob", "view", "bash"],
         skills: ["test-diagnostician"],
         prompt:
-            "Tu es le Diagnosticien des Tests, en mode plan et lecture seule. Lis le skill test-diagnostician et applique toute sa checklist. Signale tout test tautologique comme harmful, avec une severite minimale IMPORTANT. Ne modifie jamais aucun fichier.",
+            "Tu es le Diagnosticien des Tests, en mode plan et lecture seule. Lis le skill test-diagnostician et applique toute sa checklist. Identifie le framework puis lance les tests unitaires pertinents avec l'outil d'execution, sans modifier les fichiers. Mesure la duree de chaque test lorsque possible. Signale tout test depassant 5 secondes comme anomalie de performance, ainsi que les suites lentes, les timeouts et les blocages. Signale tout test tautologique comme harmful, avec une severite minimale IMPORTANT. Ne modifie jamais aucun fichier.",
     },
     {
         name: "surgeon",

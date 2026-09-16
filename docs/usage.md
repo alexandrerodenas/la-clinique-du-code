@@ -24,7 +24,9 @@ Une commande, deux praticiens, un rapport.
 `/checkup` ouvre le dossier patient, puis :
 
 1. **Le Thérapeute du Code** examine le code source du périmètre ;
-2. **Le Diagnosticien des Tests** passe les tests au laboratoire ;
+2. **Le Diagnosticien des Tests** passe les tests au laboratoire, mesure leur
+   durée et signale tout test dépassant 5 secondes, ainsi que les timeouts et
+   blocages ;
 3. La clinique produit un **rapport de checkup** : constats par sévérité, verdict
    global (✅ sain / ⚠️ soins nécessaires / ❌ hospitalisation) et ordonnance priorisée.
 

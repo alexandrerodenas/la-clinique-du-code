@@ -61,7 +61,9 @@ Dans l'application GitHub Copilot, l'extension enregistre la commande native
 les sous-agents visibles `therapist` et `diagnostician` dans la session courante.
 Le `surgeon` est déclaré comme sous-agent explicite, sans modèle forcé et sans
 inférence automatique : il ne peut intervenir que sur prescription et
-consentement explicites. Dans VS Code, le prompt
+consentement explicites. Le Diagnosticien peut exécuter les tests unitaires sans
+modifier le dépôt et signale les tests dépassant 5 secondes, les timeouts et les
+blocages. Dans VS Code, le prompt
 `.github/prompts/checkup.prompt.md` fournit la commande `/checkup`. Les agents
 diagnostiques restent en lecture seule.
 
