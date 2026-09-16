@@ -75,7 +75,7 @@ Utilisez cette procédure rigoureuse pour vérifier chaque test unitaire pendant
 * [ ] **Fragilité / isolation** : Le test est-il exempt de dépendances implicites (variables globales, vraies dépendances externes) ? Ne devrait-il échouer *uniquement* si le comportement métier change ?
 * [ ] **Pertinence des assertions (*ne jamais faire confiance à un test qu'on n'a pas vu échouer*)** : L'assertion est-elle pertinente et d'une complexité appropriée (ni trop simpliste, ni trop alambiquée) ? Êtes-vous absolument certain que le test échouerait si le code de production était modifié incorrectement ?
 * [ ] **Absence de tautologie** : Le test vérifie-t-il un résultat indépendant de l'implémentation testée, sans recopier sa logique ni comparer une valeur à elle-même ? Tout test tautologique doit être marqué **harmful** et faire l'objet d'un constat.
-* [ ] **Durée d'exécution** : Les tests unitaires pertinents ont-ils été exécutés ? Les tests individuels dépassant 5 secondes, les suites lentes, les timeouts et les blocages sont-ils identifiés avec leur durée et leur cause probable ?
+* [ ] **Durée d'exécution (axe complémentaire)** : Les tests unitaires pertinents ont-ils été exécutés ? Les tests individuels dépassant 5 secondes, les suites lentes, les timeouts et les blocages sont-ils identifiés avec leur durée et leur cause probable ? Cette analyse ne remplace jamais l'avis critique sur la qualité des tests.
 
 ## Format de sortie
 
