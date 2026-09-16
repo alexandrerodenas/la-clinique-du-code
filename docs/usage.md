@@ -3,10 +3,12 @@
 ## La commande `/checkup`
 
 Cette commande est fournie par les adaptateurs OpenCode et GitHub Copilot. Dans
-l'application GitHub Copilot, l'extension native intercepte `/checkup` et expose
-également l'outil `clinic_checkup`. Dans VS Code, elle est fournie par le prompt
-file `.github/prompts/checkup.prompt.md`. Le protocole de checkup reste
-réutilisable par d'autres intégrations.
+l'application GitHub Copilot, l'extension native enregistre `/checkup` et expose
+également l'outil de compatibilité `clinic_checkup`. Elle orchestre visiblement
+`therapist` et `diagnostician` dans la session courante ; aucun modèle n'est
+fixé, donc les sous-agents héritent du modèle de la session parente. Dans VS
+Code, elle est fournie par le prompt file `.github/prompts/checkup.prompt.md`.
+Le protocole de checkup reste réutilisable par d'autres intégrations.
 
 Dans OpenCode, elle est installée comme commande. Dans VS Code, elle apparaît
 dans le chat Copilot grâce au prompt file `.github/prompts/checkup.prompt.md`.

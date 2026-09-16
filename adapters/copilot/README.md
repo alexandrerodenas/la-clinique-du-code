@@ -27,7 +27,15 @@ Depuis la racine de la Clinique :
 Le script crée ou met à jour uniquement les fichiers de la Clinique dans le
 projet cible. Il ne lance pas de consultation automatiquement.
 
-Dans l'application GitHub Copilot, l'extension expose l'outil
-`clinic_checkup`. Elle accepte aussi `/checkup` dans le chat via un hook de
-prompt. Dans VS Code avec GitHub Copilot, le prompt apparaît comme la commande
-`/checkup` et les agents apparaissent dans le sélecteur d'agents.
+Dans l'application GitHub Copilot, l'extension enregistre la vraie commande
+`/checkup` (avec son argument de périmètre) et expose aussi l'outil
+`clinic_checkup` pour les hôtes qui ne présentent pas les commandes natives.
+Le runtime orchestre alors les sous-agents visibles `therapist` et
+`diagnostician`; `surgeon` est disponible uniquement sur invocation explicite,
+avec prescription et consentement. Aucun champ `model` n'est envoyé : chaque
+sous-agent hérite du modèle de la session parente.
+
+Le hook `onUserPromptSubmitted` reste un pont de compatibilité pour les versions
+du CLI qui ne présentent pas encore les commandes natives. Dans VS Code avec
+GitHub Copilot, le prompt apparaît comme la commande `/checkup` et les agents
+apparaissent dans le sélecteur d'agents.

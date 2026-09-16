@@ -56,11 +56,14 @@ dans `.github/extensions/la-clinique-du-code/extension.mjs`, les agents dans
 `.github/agents/`, le prompt `/checkup` dans `.github/prompts/` et les
 instructions globales dans `.github/copilot-instructions.md`.
 
-Dans l'application GitHub Copilot, l'outil `clinic_checkup` lance le diagnostic
-et la saisie `/checkup` est reconnue par l'extension. Dans VS Code, le prompt
+Dans l'application GitHub Copilot, l'extension enregistre la commande native
+`/checkup` et l'outil de compatibilité `clinic_checkup`. La commande orchestre
+les sous-agents visibles `therapist` et `diagnostician` dans la session courante.
+Le `surgeon` est déclaré comme sous-agent explicite, sans modèle forcé et sans
+inférence automatique : il ne peut intervenir que sur prescription et
+consentement explicites. Dans VS Code, le prompt
 `.github/prompts/checkup.prompt.md` fournit la commande `/checkup`. Les agents
-diagnostiques restent en lecture seule ; seul le Chirurgien peut modifier le
-code, après prescription et consentement explicites.
+diagnostiques restent en lecture seule.
 
 ---
 

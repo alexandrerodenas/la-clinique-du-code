@@ -1,4 +1,4 @@
-param(
+﻿param(
     [string]$ProjectRoot = (Get-Location).Path
 )
 
@@ -39,4 +39,4 @@ Copy-Item -LiteralPath (Join-Path $adapterRoot "prompts\checkup.prompt.md") -Des
 Copy-Item -LiteralPath (Join-Path $adapterRoot "templates\copilot-instructions.md") -Destination (Join-Path $githubRoot "copilot-instructions.md") -Force
 Copy-Item -LiteralPath (Join-Path $adapterRoot "extensions\la-clinique-du-code\extension.mjs") -Destination (Join-Path $extensionsTarget "extension.mjs") -Force
 
-Write-Host "`n  ✅ Installation terminée. Utilisez le prompt /checkup ou un agent de la Clinique.`n" -ForegroundColor Green
+Write-Host 'Installation terminee. Utilisez le prompt /checkup ou un agent de la Clinique.' -ForegroundColor Green
