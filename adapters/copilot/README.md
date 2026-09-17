@@ -30,8 +30,9 @@ projet cible. Il ne lance pas de consultation automatiquement.
 Dans l'application GitHub Copilot, l'extension enregistre la vraie commande
 `/checkup` (avec son argument de périmètre) et expose aussi l'outil
 `clinic_checkup` pour les hôtes qui ne présentent pas les commandes natives.
-Le runtime orchestre alors les sous-agents visibles `therapist` et
-`diagnostician`. Le Diagnosticien peut lancer les tests unitaires en lecture
+L'extension utilise l'API Agent Factories du SDK pour lancer explicitement et en
+parallèle les sous-agents visibles `therapist` et `diagnostician`; elle ne
+dépend pas de l'inférence du modèle. Le Diagnosticien peut lancer les tests unitaires en lecture
 seule et signale tout test dépassant 5 secondes, ainsi que les timeouts et
 blocages. Cette mesure complète son avis critique sur la pertinence, robustesse,
 isolation et maintenabilité des tests ; elle ne le remplace pas. Tous les agents
