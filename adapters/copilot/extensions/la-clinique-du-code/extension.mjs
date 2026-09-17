@@ -1,4 +1,4 @@
-import { defineFactory, joinSession } from "@github/copilot-sdk/extension";
+import { joinSession } from "@github/copilot-sdk/extension";
 
 const checkupInstructions = (scope) => `Tu coordonnes un checkup de La Clinique du Code en mode diagnostic, sans modifier le code.
 
@@ -14,13 +14,6 @@ Rends un rapport avec le contexte, les constats tries par severite, les fichiers
 
 Ne modifie jamais le code, les tests ou la configuration pendant ce checkup.
 Ne demande pas au surgeon d'intervenir pendant le checkup.`;
-
-const consultationPrompt = (scope, practitioner) => `Analyse ${scope || "le travail de la session courante"} en tant que ${practitioner}.
-
-Lis le skill qui t'est associe dans .github/skills/ et rends un rapport critique
-avec les fichiers et lignes concernes, les severites, les causes racines et des
-recommandations avec cout, risque et benefice. Ne modifie jamais le code, les
-tests ou la configuration.`;
 
 const customAgents = [
     {
@@ -58,56 +51,20 @@ const customAgents = [
     },
 ];
 
-const checkupFactory = defineFactory({
-    meta: {
-        name: "clinic-checkup",
-        description:
-            "Orchestre explicitement les consultations du Therapeute et du Diagnosticien.",
-        phases: [
-            { title: "Consultations", detail: "Lancement des deux praticiens en parallele." },
-            { title: "Synthese", detail: "Retour des rapports au coordinateur." },
-        ],
-        argsSchema: {
-            type: "object",
-            properties: { scope: { type: "string" } },
-            required: [],
-        },
-    },
-    run: async (context) => {
-        const scope = context.args?.scope || "le travail de la session courante";
-        context.phase("Consultations");
-        context.log("Lancement du Therapeute et du Diagnosticien en parallele.");
-
-        const reports = await context.parallel([
-            () =>
-                context.agent(consultationPrompt(scope, "Therapeute du Code"), {
-                    agent: "therapist",
-                    label: "Therapeute du Code",
-                }),
-            () =>
-            context.agent(consultationPrompt(scope, "Diagnosticien des Tests"), {
-                    agent: "diagnostician",
-                    label: "Diagnosticien des Tests",
-                }),
-        ]);
-
-        context.phase("Synthese");
-        context.log("Les deux consultations sont terminees ; rapports transmis au coordinateur.");
-        return { scope, reports };
-    },
-});
-
-const runCheckup = async (scope) =>
-    session.factory.run(checkupFactory, {
-        args: { scope: scope || "" },
-        notifyOnComplete: true,
-        logPhaseNames: true,
+const runCheckup = async (scope) => {
+    await session.log(
+        `Checkup lance sur ${scope || "le travail de la session courante"}. Les praticiens restent en lecture seule.`
+    );
+    return session.send({
+        prompt: checkupInstructions(scope),
+        source: "system",
+        mode: "immediate",
     });
+};
 
 const session = await joinSession({
     customAgents,
     skillDirectories: [".github/skills"],
-    factories: [checkupFactory],
     commands: [
         {
             name: "checkup",

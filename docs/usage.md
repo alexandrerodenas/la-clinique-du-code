@@ -45,9 +45,8 @@ consulte le thérapeute sur mon code    # revue de qualité ciblée
 ```
 
 Les agents de la Clinique sont invocables par l'utilisateur uniquement. Ils ne
-sont pas sélectionnés automatiquement par le modèle ; l'extension Copilot
-utilise l'API Agent Factories pour que `/checkup` les lance explicitement et en
-parallèle, avec les événements de sous-agents visibles dans la session.
+sont pas sélectionnés automatiquement par le modèle ; `/checkup` lance le
+coordinateur du checkup dans la session courante.
 
 Après un développement significatif, votre assistant peut vous **inviter** à lancer un
 checkup :
