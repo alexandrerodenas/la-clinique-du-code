@@ -34,8 +34,9 @@ Le runtime orchestre alors les sous-agents visibles `therapist` et
 `diagnostician`. Le Diagnosticien peut lancer les tests unitaires en lecture
 seule et signale tout test dépassant 5 secondes, ainsi que les timeouts et
 blocages. Cette mesure complète son avis critique sur la pertinence, robustesse,
-isolation et maintenabilité des tests ; elle ne le remplace pas. `surgeon` est
-disponible uniquement sur invocation explicite,
+isolation et maintenabilité des tests ; elle ne le remplace pas. Tous les agents
+de la Clinique sont user-invocable et désactivés pour l'invocation automatique
+par le modèle ; `surgeon` est disponible uniquement sur invocation explicite,
 avec prescription et consentement. Aucun champ `model` n'est envoyé : chaque
 sous-agent hérite du modèle de la session parente.
 

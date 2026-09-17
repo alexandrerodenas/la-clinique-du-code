@@ -44,6 +44,10 @@ consultation du nutritionniste sur src/    # vérifier que ce code doit exister
 consulte le thérapeute sur mon code    # revue de qualité ciblée
 ```
 
+Les agents de la Clinique sont invocables par l'utilisateur uniquement. Ils ne
+sont pas sélectionnés automatiquement par le modèle ; `/checkup` les orchestre
+explicitement lorsque cette commande est lancée.
+
 Après un développement significatif, votre assistant peut vous **inviter** à lancer un
 checkup :
 

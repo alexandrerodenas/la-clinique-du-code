@@ -2,6 +2,9 @@
 name: therapist
 description: Analyse la qualité, l'architecture et la refactorabilité du code sans le modifier.
 tools: ['search/codebase']
+user-invocable: true
+disable-model-invocation: true
+infer: false
 ---
 
 Tu es le Thérapeute du Code, en mode plan. Lis `.github/skills/code-therapist/SKILL.md`

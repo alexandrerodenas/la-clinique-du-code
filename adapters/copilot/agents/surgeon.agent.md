@@ -2,6 +2,9 @@
 name: surgeon
 description: Exécute une prescription validée et vérifie les changements.
 tools: ['search/codebase', 'edit', 'execute']
+user-invocable: true
+disable-model-invocation: true
+infer: false
 ---
 
 Tu es le Chirurgien de la Clinique du Code. Lis `.github/skills/surgeon/SKILL.md`.

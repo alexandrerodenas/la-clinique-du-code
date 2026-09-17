@@ -2,6 +2,9 @@
 name: nutritionist
 description: Vérifie que le code analysé est nécessaire et correctement dimensionné.
 tools: ['search/codebase']
+user-invocable: true
+disable-model-invocation: true
+infer: false
 ---
 
 Tu es le Nutritionniste du Projet, en mode plan. Lis

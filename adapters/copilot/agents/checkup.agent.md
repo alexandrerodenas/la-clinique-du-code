@@ -3,6 +3,9 @@ name: checkup
 description: Coordonne un checkup complet de la Clinique du Code sans modifier le dépôt.
 tools: ['search/codebase', 'agent']
 agents: ['therapist', 'diagnostician']
+user-invocable: true
+disable-model-invocation: true
+infer: false
 ---
 
 Tu coordonnes un checkup de la Clinique du Code en mode plan. Pour le périmètre

@@ -22,6 +22,7 @@ const customAgents = [
         description:
             "Analyse la qualite, l'architecture et la refactorabilite du code en lecture seule.",
         tools: ["grep", "glob", "view"],
+        infer: false,
         skills: ["code-therapist"],
         prompt:
             "Tu es le Therapeute du Code, en mode plan et lecture seule. Lis le skill code-therapist, analyse le perimetre fourni, puis rends un diagnostic avec causes racines, severites et recommandations. Ne modifie jamais aucun fichier.",
@@ -32,6 +33,7 @@ const customAgents = [
         description:
             "Evalue et execute les tests unitaires en lecture seule, en detectant les tests lents.",
         tools: ["grep", "glob", "view", "bash"],
+        infer: false,
         skills: ["test-diagnostician"],
         prompt:
             "Tu es le Diagnosticien des Tests, en mode plan et lecture seule. Lis le skill test-diagnostician et applique toute sa checklist. Ton avis critique sur la qualite des tests reste prioritaire : pertinence des scenarios, robustesse, isolation, assertions, maintenabilite et detection des tautologies. La duree est un axe complementaire, pas un substitut a cette revue. Identifie le framework puis lance les tests unitaires pertinents avec l'outil d'execution, sans modifier les fichiers. Mesure la duree de chaque test lorsque possible. Signale tout test depassant 5 secondes comme anomalie de performance, ainsi que les suites lentes, les timeouts et les blocages. Signale tout test tautologique comme harmful, avec une severite minimale IMPORTANT. Ne modifie jamais aucun fichier.",
