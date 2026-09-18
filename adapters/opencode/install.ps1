@@ -40,6 +40,9 @@ Get-ChildItem -LiteralPath (Join-Path $adapterRoot "agents") -File -Filter "*.md
 Write-Host "  ➜ Installation de la commande /checkup..."
 New-Item -ItemType Directory -Path $commandsTarget -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $adapterRoot "commands\checkup.md") -Destination (Join-Path $commandsTarget "checkup.md") -Force
+Write-Host "  ➜ Installation de la commande /intensive-care (alias /soins-intensifs)..."
+Copy-Item -LiteralPath (Join-Path $adapterRoot "commands\intensive-care.md") -Destination (Join-Path $commandsTarget "intensive-care.md") -Force
+Copy-Item -LiteralPath (Join-Path $adapterRoot "commands\intensive-care.md") -Destination (Join-Path $commandsTarget "soins-intensifs.md") -Force
 
 Write-Host "`n  ✅ Installation terminée. Les praticiens sont prêts à recevoir vos patients.`n" -ForegroundColor Green
 

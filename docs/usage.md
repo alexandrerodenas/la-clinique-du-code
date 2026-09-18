@@ -34,6 +34,28 @@ Une commande, deux praticiens, un rapport.
 > praticiens diagnostiquent et prescrivent. L'opération (le refactoring) ne se fait
 > qu'avec l'accord explicite du patient — l'utilisateur.
 
+## Le mode soins intensifs
+
+Les adaptateurs OpenCode et Copilot proposent aussi `/intensive-care`, avec
+`/soins-intensifs` comme alias français. C'est le seul mode qui enchaîne
+automatiquement le diagnostic et l'opération, et il reste entièrement opt-in :
+le lancement explicite de la commande vaut consentement pour les prescriptions
+successives dans le périmètre fourni.
+
+```bash
+/intensive-care                         # session courante
+/intensive-care <chemin>                # périmètre précis
+/intensive-care branch:<branche>        # diffs d'une branche vs la base
+/soins-intensifs <chemin>               # alias français
+```
+
+Le protocole lance un checkup, transmet sa prescription actionnable au
+Chirurgien, vérifie le résultat, puis relance un checkup avec le même périmètre.
+Il s'arrête quand il n'y a plus de prescription, en cas de refus ou d'échec,
+d'absence de progrès, ou après 10 passes. Chaque passe et sa raison d'arrêt
+figurent dans le bilan final. Une recommandation spéculative ou non actionnable
+ne déclenche pas d'opération.
+
 ## Les consultations à la demande
 
 Chaque praticien est consultable seul, quand vous en avez besoin :

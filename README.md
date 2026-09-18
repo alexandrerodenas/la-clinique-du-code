@@ -4,7 +4,7 @@
 
 ![Approche](https://img.shields.io/badge/approche-core%20portable%20%2B%20adaptateurs-18181B)
 ![Praticiens](https://img.shields.io/badge/praticiens-5-success)
-![Mode](https://img.shields.io/badge/mode-100%25%20manuel-important)
+![Mode](https://img.shields.io/badge/mode-manuel%20%2B%20soins%20intensifs-important)
 ![Checkup](https://img.shields.io/badge/checkup-pr%C3%AAt-blue)
 ![Langue](https://img.shields.io/badge/langue-Fran%C3%A7ais-9cf)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -62,12 +62,13 @@ le code prescrit, jamais plus.
 
 ```mermaid
 flowchart LR
-    R["🩻 Radiologue<br/>prépare le terrain"] --> C["🧑‍⚕️ /checkup<br/>bilan du généraliste"]
-    C --> N["🥗 Nutritionniste<br/>complète le bilan"]
-    N --> S["🩺 Chirurgien<br/>opère la prescription"]
+    R["🩻 Radiologue<br/>(à la demande)"] -.-> C["🧑‍⚕️ /checkup<br/>bilan du généraliste"]
+    C --> S["🩺 Chirurgien<br/>opère la prescription"]
+    N["🥗 Nutritionniste<br/>(à la demande)"] -.-> S
 ```
 
-Chaque expert reste consultable **seul**, à la demande — le parcours est une
+Chaque expert reste consultable **seul**, à la demande — le Radiologue et le
+Nutritionniste ne font pas partie du protocole `/checkup`. Le parcours est une
 suggestion, pas un protocole imposé. Et la règle d'or s'applique partout : on
 diagnostique et on prescrit en mode plan, et on n'opère jamais sans prescription
 validée.
@@ -81,18 +82,21 @@ La Clinique est organisée en deux couches :
 - `core/` contient les principes, protocoles et outils indépendants d'un harnais ;
 - `adapters/` contient les intégrations propres à chaque assistant de code.
 
-L'adaptateur OpenCode est fourni dans `adapters/opencode/`. D'autres adaptateurs
-peuvent traduire les mêmes protocoles dans leur propre format.
+Les adaptateurs OpenCode et GitHub Copilot sont fournis dans
+`adapters/opencode/` et `adapters/copilot/`. Ils traduisent les mêmes protocoles
+portables, notamment `/checkup` et le mode `/intensive-care` (alias
+`/soins-intensifs`), dans leur propre format.
 
 ## 📦 Installation
 
-Voir [**docs/installation.md**](docs/installation.md) — installation de l'adaptateur
-OpenCode et utilisation du cœur portable.
+Voir [**docs/installation.md**](docs/installation.md) — installation des
+adaptateurs OpenCode et GitHub Copilot, et utilisation du cœur portable.
 
 ## 🧭 Utilisation
 
-Voir [**docs/usage.md**](docs/usage.md) — la commande `/checkup` (session, chemin,
-branche), les consultations à la demande, et le passage au bloc avec le Chirurgien.
+Voir [**docs/usage.md**](docs/usage.md) — les commandes `/checkup` et
+`/intensive-care` (session, chemin, branche), les consultations à la demande, et
+le passage au bloc avec le Chirurgien.
 
 ---
 

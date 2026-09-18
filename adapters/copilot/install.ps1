@@ -36,7 +36,9 @@ Get-ChildItem -LiteralPath (Join-Path $adapterRoot "agents") -File -Filter "*.ag
 }
 
 Copy-Item -LiteralPath (Join-Path $adapterRoot "prompts\checkup.prompt.md") -Destination (Join-Path $promptsTarget "checkup.prompt.md") -Force
+Copy-Item -LiteralPath (Join-Path $adapterRoot "prompts\intensive-care.prompt.md") -Destination (Join-Path $promptsTarget "intensive-care.prompt.md") -Force
+Copy-Item -LiteralPath (Join-Path $adapterRoot "prompts\intensive-care.prompt.md") -Destination (Join-Path $promptsTarget "soins-intensifs.prompt.md") -Force
 Copy-Item -LiteralPath (Join-Path $adapterRoot "templates\copilot-instructions.md") -Destination (Join-Path $githubRoot "copilot-instructions.md") -Force
 Copy-Item -LiteralPath (Join-Path $adapterRoot "extensions\la-clinique-du-code\extension.mjs") -Destination (Join-Path $extensionsTarget "extension.mjs") -Force
 
-Write-Host 'Installation terminee. Utilisez le prompt /checkup ou un agent de la Clinique.' -ForegroundColor Green
+Write-Host 'Installation terminee. Utilisez /checkup, /intensive-care ou un agent de la Clinique.' -ForegroundColor Green

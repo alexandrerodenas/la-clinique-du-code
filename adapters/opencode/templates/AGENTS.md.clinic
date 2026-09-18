@@ -21,13 +21,21 @@ Le seul praticien en **mode build** (capable de modifier le code) :
 
 `/checkup` lance une consultation complète : il dispatche le Thérapeute du Code et le Diagnosticien des Tests (sous-agents en parallèle) qui examinent le code et les tests, puis produit un rapport clinique avec verdict et ordonnance.
 
+### Les soins intensifs
+
+`/intensive-care` (alias `/soins-intensifs`) est un parcours explicite et
+consenti par l'utilisateur. Il lance un checkup, confie sa prescription
+actionnable au Chirurgien, puis reboucle sur un checkup avec le même périmètre.
+Il s'arrête quand il n'y a plus de prescription, en cas de blocage ou après
+10 passes. Il ne se lance jamais de lui-même.
+
 ### Le parcours de soins
 
 - `/checkup` est le **bilan du généraliste** : la consultation d'entrée, à proposer en premier.
-- **Le Radiologue prépare le terrain** (`radiologist`) : sa radio désigne les fichiers qui saignent (churn + couplage). Il dit au généraliste *où regarder* — utile avant ou pendant un checkup.
-- **Le Nutritionniste complète le bilan** (`nutritionist`) : après un checkup, il vérifie que le code sain mais suspect **devrait** exister (code mort, sur-ingénierie, dosage). Le Thérapeute lui transmet les constats de nécessité croisés au passage.
+- **Le Radiologue prépare le terrain** (`radiologist`) : sa radio désigne les fichiers qui saignent (churn + couplage). Il est consultable séparément, avant ou après un checkup ; il ne fait pas partie du protocole de checkup.
+- **Le Nutritionniste complète le bilan** (`nutritionist`) : il est consultable séparément pour vérifier que le code sain mais suspect **devrait** exister (code mort, sur-ingénierie, dosage). Il ne fait pas partie du protocole de checkup.
 - **Le Chirurgien opère** (`surgeon`) : une fois la prescription validée, il exécute l'ordonnance dans des sous-agents. Jamais d'opération sans bilan validé.
-- Parcours typique : radio → checkup → nutritionniste → chirurgien. Chaque expert reste consultable seul, à la demande.
+- Parcours possible : radio (à la demande) → checkup → nutritionniste (à la demande) → chirurgien. Le Radiologue et le Nutritionniste ne font pas partie du protocole de checkup ; chaque expert reste consultable seul.
 
 ### Philosophie : 100 % manuel
 

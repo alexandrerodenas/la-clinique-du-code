@@ -6,8 +6,8 @@ Le cœur portable se trouve dans `core/`. Il contient les protocoles des
 praticiens et l'analyseur de zones de douleur. Les fichiers spécifiques à
 les assistants sont regroupés dans `adapters/`.
 
-Cette page documente l'installation de cet adaptateur. Un autre assistant peut
-réutiliser `core/` en fournissant sa propre intégration.
+Cette page documente l'installation des deux adaptateurs. Un autre assistant
+peut réutiliser `core/` en fournissant sa propre intégration.
 
 ## Prérequis
 
@@ -28,8 +28,9 @@ git clone https://github.com/alexandrerodenas/la-clinique-du-code.git
 ```
 
 L'installation copie les protocoles du `core/` au format skill OpenCode, ainsi
-que les agents, la commande `/checkup` et l'outil d'analyse associé dans la
-configuration globale d'OpenCode — ils seront
+que les agents, les commandes `/checkup` et `/intensive-care` (alias
+`/soins-intensifs`) et l'outil d'analyse associé dans la configuration globale
+d'OpenCode — ils seront
 disponibles dans tous vos projets.
 
 ## Étape 3 — Installer le système prompt de la clinique
@@ -53,19 +54,23 @@ Depuis la racine de la Clinique, installez l'adaptateur dans le projet cible :
 
 L'adaptateur installe les protocoles dans `.github/skills/`, l'extension native
 dans `.github/extensions/la-clinique-du-code/extension.mjs`, les agents dans
-`.github/agents/`, le prompt `/checkup` dans `.github/prompts/` et les
-instructions globales dans `.github/copilot-instructions.md`.
+`.github/agents/`, les prompts `/checkup` et `/intensive-care` (avec l'alias
+`/soins-intensifs`) dans `.github/prompts/` et les instructions globales dans
+`.github/copilot-instructions.md`.
 
-Dans l'application GitHub Copilot, l'extension enregistre la commande native
-`/checkup` et l'outil de compatibilité `clinic_checkup`. La commande orchestre
-les sous-agents visibles `therapist` et `diagnostician` dans la session courante.
-Le `surgeon` est déclaré comme sous-agent explicite, sans modèle forcé et sans
-inférence automatique : il ne peut intervenir que sur prescription et
+Dans l'application GitHub Copilot, l'extension enregistre les commandes natives
+`/checkup`, `/intensive-care` et `/soins-intensifs`, ainsi que les outils de
+compatibilité `clinic_checkup` et `clinic_intensive_care`. Le checkup orchestre
+uniquement les sous-agents `therapist` et `diagnostician` dans la session
+courante ; le `radiologist` et le `nutritionist` restent consultables à la
+demande. Le `surgeon` est déclaré comme sous-agent explicite, sans modèle forcé
+et sans inférence automatique : il ne peut intervenir que sur prescription et
 consentement explicites. Le Diagnosticien peut exécuter les tests unitaires sans
 modifier le dépôt et signale les tests dépassant 5 secondes, les timeouts et les
 blocages. Dans VS Code, le prompt
-`.github/prompts/checkup.prompt.md` fournit la commande `/checkup`. Les agents
-diagnostiques restent en lecture seule.
+`.github/prompts/checkup.prompt.md` fournit la commande `/checkup` et
+`.github/prompts/intensive-care.prompt.md` fournit le mode soins intensifs. Les
+agents diagnostiques restent en lecture seule.
 
 ---
 
@@ -75,8 +80,9 @@ Pas envie de le faire à la main ? Copiez-collez le prompt suivant dans votre
 assistant de code. Il installe la clinique tout seul, étape par étape :
 
 ```text
-Tu vas installer « La Clinique du Code » (un kit portable avec un adaptateur OpenCode : des praticiens
-[skills] + des agents [mode plan + chirurgien] + la commande /checkup + un système
+Tu vas installer « La Clinique du Code » (un kit portable avec des adaptateurs
+OpenCode et GitHub Copilot : des praticiens [skills] + des agents [mode plan +
+chirurgien] + les commandes /checkup et /intensive-care + un système
 prompt) depuis le dépôt
 https://github.com/alexandrerodenas/la-clinique-du-code.git
 
@@ -103,8 +109,10 @@ Suis ces étapes exactement, dans l'ordre :
      (therapist, diagnostician, radiologist, nutritionist, surgeon,
      et tous ceux qui apparaîtront à l'avenir)
 
-5. Installe la commande /checkup :
+5. Installe les commandes :
    - copie <tmp>\adapters\opencode\commands\checkup.md vers <config>\commands\checkup.md
+   - copie <tmp>\adapters\opencode\commands\intensive-care.md vers
+     <config>\commands\intensive-care.md et <config>\commands\soins-intensifs.md
 
 6. Installe le système prompt de la clinique :
     - lis le fichier <tmp>\adapters\opencode\templates\AGENTS.md.clinic

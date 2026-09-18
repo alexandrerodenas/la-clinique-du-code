@@ -25,11 +25,18 @@ nécessité et sa maintenabilité.
 - Le Chirurgien ne traite jamais ce qui n'est pas prescrit.
 - La Clinique est sollicitée manuellement ; elle ne s'impose pas dans le flux
   de développement.
+- Le mode soins intensifs est un parcours explicite qui reboucle sur un checkup
+  après chaque opération jusqu'à épuisement de la prescription actionnable.
+- Le mode soins intensifs est borné à 10 passes et s'arrête explicitement en cas
+  d'échec, de refus ou d'absence de progrès.
 
 ## Parcours recommandé
 
 ```text
-Radiologue -> Checkup -> Nutritionniste -> Chirurgien
+Radiologue (optionnel) -> Checkup -> Chirurgien
+Nutritionniste (optionnel) -> Chirurgien
 ```
 
-Ce parcours est une suggestion. Chaque praticien peut être consulté séparément.
+Ce parcours est une suggestion. Le Radiologue et le Nutritionniste sont des
+experts à la demande et ne font pas partie du protocole de checkup. Chaque
+praticien peut être consulté séparément.
