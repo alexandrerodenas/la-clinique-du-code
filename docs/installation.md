@@ -1,139 +1,140 @@
-# 📋 Installation — Prendre rendez-vous
+# 📋 Installation — Make an appointment
 
 ## Architecture
 
-Le cœur portable se trouve dans `core/`. Il contient les protocoles des
-praticiens et l'analyseur de zones de douleur. Les fichiers spécifiques à
-les assistants sont regroupés dans `adapters/`.
+The portable core is located in `core/`. It contains the practitioners'
+protocols and the zone-of-pain analyzer. Adapter-specific files are grouped in
+`adapters/`.
 
-Cette page documente l'installation des deux adaptateurs. Un autre assistant
-peut réutiliser `core/` en fournissant sa propre intégration.
+This page documents the installation of both adapters. Another assistant
+can reuse `core/` by providing its own integration.
 
-## Prérequis
+## Prerequisites
 
-- [OpenCode](https://opencode.ai) ou [GitHub Copilot dans VS Code](https://code.visualstudio.com/docs/copilot/overview), selon l'adaptateur choisi
+- [OpenCode](https://opencode.ai) or [GitHub Copilot in VS Code](https://code.visualstudio.com/docs/copilot/overview), depending on the chosen adapter
 
-## Étape 1 — Cloner la clinique
+## Step 1 — Clone the clinic
 
 ```bash
 git clone https://github.com/alexandrerodenas/la-clinique-du-code.git
 ```
 
-## Étape 2 — Installer l'adaptateur OpenCode
+## Step 2 — Install the OpenCode adapter
 
-**Windows (PowerShell) :**
+**Windows (PowerShell):**
 
 ```powershell
 .\install.ps1
 ```
 
-L'installation copie les protocoles du `core/` au format skill OpenCode, ainsi
-que les agents, les commandes `/checkup` et `/intensive-care` (alias
-`/soins-intensifs`) et l'outil d'analyse associé dans la configuration globale
-d'OpenCode — ils seront
-disponibles dans tous vos projets.
+The installation copies the `core/` protocols in OpenCode skill format, along
+with the agents and the `/checkup` and `/intensive-care` commands (aka
+`/soins-intensifs`) and the associated scan tool in the global configuration
+of OpenCode — they will be
+available in all your projects.
 
-## Étape 3 — Installer le système prompt de la clinique
+## Step 3 — Install the clinic prompt system
 
-Ajoutez le contenu de [`adapters/opencode/templates/AGENTS.md.clinic`](../adapters/opencode/templates/AGENTS.md.clinic)
-dans votre `AGENTS.md` (global ou par projet). C'est ce qui donne à votre assistant la
-notion de checkup : savoir **proposer** une consultation après un développement —
-jamais l'imposer.
+Add the contents of [`adapters/opencode/templates/AGENTS.md.clinic`](../adapters/opencode/templates/AGENTS.md.clinic)
+in your `AGENTS.md` (global or per project). This is what gives your assistant the
+concept of a checkup: being able to **suggest** a consultation after development —
+never impose it.
 
-## Étape 4 — Redémarrer OpenCode
+## Step 4 — Restart OpenCode
 
-La configuration est chargée au démarrage. Quittez et relancez OpenCode.
+The configuration is loaded at startup. Exit and restart OpenCode.
 
-## Application GitHub Copilot et GitHub Copilot dans VS Code
+## GitHub Copilot application and GitHub Copilot in VS Code
 
-Depuis la racine de la Clinique, installez l'adaptateur dans le projet cible :
+From the root of the Clinic, install the adapter in the target project:
 
 ```powershell
-.\adapters\copilot\install.ps1 -ProjectRoot C:\chemin\du\projet
+.\adapters\copilot\install.ps1 -ProjectRoot C:\path\to\project
 ```
 
-L'adaptateur installe les protocoles dans `.github/skills/`, l'extension native
-dans `.github/extensions/la-clinique-du-code/extension.mjs`, les agents dans
-`.github/agents/`, les prompts `/checkup` et `/intensive-care` (avec l'alias
-`/soins-intensifs`) dans `.github/prompts/` et les instructions globales dans
+The adapter installs the protocols in `.github/skills/`, the native extension
+in `.github/extensions/la-clinique-du-code/extension.mjs`, the agents in
+`.github/agents/`, the prompts `/checkup` and `/intensive-care` (with the alias
+`/soins-intensifs`) in `.github/prompts/` and the global instructions in
 `.github/copilot-instructions.md`.
 
-Dans l'application GitHub Copilot, l'extension enregistre les commandes natives
-`/checkup`, `/intensive-care` et `/soins-intensifs`, ainsi que les outils de
-compatibilité `clinic_checkup` et `clinic_intensive_care`. Le checkup orchestre
-uniquement les sous-agents `therapist` et `diagnostician` dans la session
-courante ; le `radiologist` et le `nutritionist` restent consultables à la
-demande. Le `surgeon` est déclaré comme sous-agent explicite, sans modèle forcé
-et sans inférence automatique : il ne peut intervenir que sur prescription et
-consentement explicites. Le Diagnosticien peut exécuter les tests unitaires sans
-modifier le dépôt et signale les tests dépassant 5 secondes, les timeouts et les
-blocages. Dans VS Code, le prompt
-`.github/prompts/checkup.prompt.md` fournit la commande `/checkup` et
-`.github/prompts/intensive-care.prompt.md` fournit le mode soins intensifs. Les
-agents diagnostiques restent en lecture seule.
+In the GitHub Copilot application, the extension registers native commands
+`/checkup`, `/intensive-care` and `/soins-intensifs`, as well as the tools for
+`clinic_checkup` and `clinic_intensive_care` compatibility. The checkup
+coordinator launches only the `therapist` and `diagnostician` subagents in the
+current session; the `radiologist` and `nutritionist` remain available for
+consultation on request. The `surgeon` is declared as an explicit subagent,
+without a forced model
+and without automatic inference: it can only intervene on prescription and
+explicit consent. The Diagnostician can run unit tests without
+modifying the repository and reports tests exceeding 5 seconds, timeouts and
+hangs. In VS Code, the prompt
+`.github/prompts/checkup.prompt.md` provides the `/checkup` command and
+`.github/prompts/intensive-care.prompt.md` provides intensive care mode. The
+diagnostic agents remain read-only.
 
 ---
 
-## 🤖 Installation par un agent de code (from scratch)
+## 🤖 Installation by a code agent (from scratch)
 
-Pas envie de le faire à la main ? Copiez-collez le prompt suivant dans votre
-assistant de code. Il installe la clinique tout seul, étape par étape :
+Don't want to do it by hand? Copy and paste the following prompt into your
+coding assistant. It will set up the clinic step by step:
 
 ```text
-Tu vas installer « La Clinique du Code » (un kit portable avec des adaptateurs
-OpenCode et GitHub Copilot : des praticiens [skills] + des agents [mode plan +
-chirurgien] + les commandes /checkup et /intensive-care + un système
-prompt) depuis le dépôt
+You are going to install “La Clinique du Code” (a portable kit with adapters
+OpenCode and GitHub Copilot: practitioners [skills] + agents [plan mode +
+surgeon] + the /checkup and /intensive-care commands + a system
+prompt) from the repository
 https://github.com/alexandrerodenas/la-clinique-du-code.git
 
-Suis ces étapes exactement, dans l'ordre :
+Follow these steps exactly, in order:
 
-1. Clone le dépôt dans un dossier temporaire :
-   git clone https://github.com/alexandrerodenas/la-clinique-du-code.git <tmp>
+1. Clone the repository into a temporary folder:
+git clone https://github.com/alexandrerodenas/la-clinique-du-code.git <tmp>
 
-2. Détermine le dossier de configuration global d'OpenCode :
-   - Windows : %USERPROFILE%\.config\opencode\
-   - Linux / macOS : ~/.config/opencode/
-   (appelons-le <config>)
+2. Determine the global OpenCode configuration folder:
+   - Windows: %USERPROFILE%\.config\opencode\
+   - Linux / macOS: ~/.config/opencode/
+(let's call it <config>)
 
-3. Installe tous les protocoles comme skills :
-   - pour chaque fichier <tmp>\core\protocols\<nom>.md, crée
-     <config>\skills\<nom>\SKILL.md (code-therapist, test-diagnostician,
-     zone-of-pain, nutritionist, et tous ceux qui apparaîtront à l'avenir)
-   - copie <tmp>\core\tools\zone-of-pain-analyzer.js vers
+3. Install all protocols as skills:
+   - for each file <tmp>\core\protocols\<name>.md, create
+     <config>\skills\<name>\SKILL.md (code-therapist, test-diagnostician,
+zone-of-pain, nutritionist, and anyone else who appears in the future)
+   - copy <tmp>\core\tools\zone-of-pain-analyzer.js to
      <config>\skills\zone-of-pain\zone-of-pain-analyzer.js
 
-4. Installe les agents :
-   - crée le dossier <config>\agent (ou agents)
-   - copie chaque fichier <tmp>\adapters\opencode\agents\<nom>.md vers <config>\agent\<nom>.md
+4. Install the agents:
+   - create the <config>\agent (or agents) folder
+   - copy each file <tmp>\adapters\opencode\agents\<name>.md to <config>\agent\<name>.md
      (therapist, diagnostician, radiologist, nutritionist, surgeon,
-     et tous ceux qui apparaîtront à l'avenir)
+and all those who appear in the future)
 
-5. Installe les commandes :
-   - copie <tmp>\adapters\opencode\commands\checkup.md vers <config>\commands\checkup.md
-   - copie <tmp>\adapters\opencode\commands\intensive-care.md vers
-     <config>\commands\intensive-care.md et <config>\commands\soins-intensifs.md
+5. Install the commands:
+   - copy <tmp>\adapters\opencode\commands\checkup.md to <config>\commands\checkup.md
+   - copy <tmp>\adapters\opencode\commands\intensive-care.md to
+<config>\commands\intensive-care.md and <config>\commands\soins-intensifs.md
 
-6. Installe le système prompt de la clinique :
-    - lis le fichier <tmp>\adapters\opencode\templates\AGENTS.md.clinic
-   - ajoute son contenu à la fin du fichier <config>\AGENTS.md
-     (en retirant la première ligne d'en-tête « # Ce bloc est à ajouter dans le
-     fichier AGENTS.md de votre projet. »)
-   - si <config>\AGENTS.md n'existe pas, crée-le avec ce contenu
+6. Install the clinic prompt system:
+   - read the file <tmp>\adapters\opencode\templates\AGENTS.md.clinic
+   - append its content to the end of <config>\AGENTS.md
+     (removing the first header line “# This block is to be added in the
+     AGENTS.md file of your project.”)
+   - if <config>\AGENTS.md does not exist, create it with this content
 
-7. Nettoie le dossier temporaire <tmp>.
+7. Clean the temporary folder <tmp>.
 
-8. Vérifie que tous les praticiens, les agents et la commande sont en place, et
-   que le bloc clinique est bien présent dans AGENTS.md. Annonce le résultat.
+8. Verify that all practitioners, agents, and commands are in place, and
+that the clinical block is present in AGENTS.md. Announce the result.
 
-9. Préviens l'utilisateur : il doit quitter et redémarrer OpenCode pour que la
-   Clinique prenne effet.
+9. Warn the user that they must exit and restart OpenCode for the
+   Clinic to take effect.
 
-Si tu détectes d'anciens praticiens installés ailleurs (par exemple
-~/.agents/skills/code-therapy, ~/.agents/skills/test-diagnostics ou
-~/.agents/skills/zone-of-pain), demande à l'utilisateur s'il veut les supprimer
-avant de terminer.
+If you detect former practitioners installed elsewhere (for example
+~/.agents/skills/code-therapy, ~/.agents/skills/test-diagnostics or
+~/.agents/skills/zone-of-pain), ask the user whether they want to delete them
+before finishing.
 ```
 
-Ce prompt fonctionne sur n'importe quel assistant de code disposant d'un shell
-(Windows, Linux ou macOS) : il ne présuppose ni script, ni outil spécifique.
+This prompt works with any coding assistant that has a shell
+(Windows, Linux or macOS): it does not require a script or specific tool.

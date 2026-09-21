@@ -1,52 +1,51 @@
-# Adaptateur GitHub Copilot
+# Adapter GitHub Copilot
 
-Cet adaptateur traduit les protocoles portables de `core/` dans les conventions
-de GitHub Copilot. Il prend en charge l'application GitHub Copilot et GitHub
-Copilot dans VS Code :
+This adapter translates the portable protocols of `core/` into conventions
+by GitHub Copilot. It supports GitHub Copilot app and GitHub
+Copilot in VS Code:
 
-- `.github/skills/` pour les protocoles des praticiens ;
-- `.github/extensions/la-clinique-du-code/extension.mjs` pour le plugin natif
-  de l'application GitHub Copilot ;
-- `.github/agents/` pour les praticiens spécialisés ;
-- `.github/prompts/checkup.prompt.md` pour le checkup manuel ;
-- `.github/prompts/intensive-care.prompt.md` pour les soins intensifs
-  (`/intensive-care`, alias `/soins-intensifs`) ;
-- `.github/agents/checkup.agent.md` pour coordonner les consultations ;
-- `.github/agents/intensive-care.agent.md` pour coordonner la boucle
-  checkup / chirurgie ;
-- `.github/copilot-instructions.md` pour le rappel de la philosophie de la
-  Clinique.
+- `.github/skills/` for practitioner protocols;
+- `.github/extensions/la-clinique-du-code/extension.mjs` for native plugin
+from the GitHub Copilot application;
+- `.github/agents/` for specialist practitioners;
+- `.github/prompts/checkup.prompt.md` for manual checkup;
+- `.github/prompts/intensive-care.prompt.md` for intensive care
+(`/intensive-care`, aka `/soins-intensifs`);
+- `.github/agents/checkup.agent.md` to coordinate consultations;
+- `.github/agents/intensive-care.agent.md` to coordinate the loop
+check-up / surgery;
+- `.github/copilot-instructions.md` for the reminder of the philosophy of the
+Clinical.
 
-L'analyseur de zones de douleur est copié dans
+The zone-of-pain analyzer is copied to
 `.github/skills/zone-of-pain/zone-of-pain-analyzer.js`.
 
-## Installation
+## Facility
 
-Depuis la racine de la Clinique :
+From the root of the Clinic:
 
 ```powershell
-.\adapters\copilot\install.ps1 -ProjectRoot C:\chemin\du\projet
+.\adapters\copilot\install.ps1 -ProjectRoot C:\path\to\project
 ```
 
-Le script crée ou met à jour uniquement les fichiers de la Clinique dans le
-projet cible. Il ne lance pas de consultation automatiquement.
+The script only creates or updates the Clinic files in the
+target project. It does not launch a consultation automatically.
 
-Dans l'application GitHub Copilot, l'extension enregistre les commandes natives
-`/checkup`, `/intensive-care` et `/soins-intensifs` et expose aussi les outils
-`clinic_checkup` et `clinic_intensive_care` pour les hôtes qui ne présentent pas
-les commandes natives. Le coordinateur lance le diagnostic dans la session
-courante ; les soins intensifs enchaînent checkup, prescription au surgeon et
-nouveau checkup jusqu'à résolution, blocage ou 10 passes. Le Diagnosticien peut
-lancer les tests unitaires en lecture
-seule et signale tout test dépassant 5 secondes, ainsi que les timeouts et
-blocages. Cette mesure complète son avis critique sur la pertinence, robustesse,
-isolation et maintenabilité des tests ; elle ne le remplace pas. Tous les agents
-de la Clinique sont user-invocable et désactivés pour l'invocation automatique
-par le modèle ; `surgeon` est disponible uniquement sur invocation explicite,
-avec prescription et consentement. Aucun champ `model` n'est envoyé : chaque
-sous-agent hérite du modèle de la session parente.
+In the GitHub Copilot application, the extension registers native commands
+`/checkup`, `/intensive-care` and `/soins-intensifs` and also exposes the tools
+`clinic_checkup` and `clinic_intensive_care` for hosts that do not present
+native commands. The coordinator launches the diagnosis in the current session; intensive care follows checkup, prescription to the surgeon and
+new checkup until resolution, blocking or 10 passes. The Diagnostician can
+run unit tests for reading
+alone and reports any test exceeding 5 seconds, as well as timeouts and
+hangs. This measure completes its critical opinion on the relevance, robustness,
+test isolation and maintainability; it does not replace it. All agents
+of the Clinic are user-summonable and disabled for automatic summoning
+by the model; `surgeon` is only available upon explicit invocation,
+with prescription and consent. No `model` field is sent: each
+subagent inherits the model from the parent session.
 
-Le hook `onUserPromptSubmitted` reste un pont de compatibilité pour les versions
-du CLI qui ne présentent pas encore les commandes natives. Dans VS Code avec
-GitHub Copilot, le prompt apparaît comme la commande `/checkup` et les agents
-apparaissent dans le sélecteur d'agents.
+The `onUserPromptSubmitted` hook remains a compatibility bridge for versions
+of the CLI which do not yet present the native commands. In VS Code with
+GitHub Copilot, the prompt appears as the command `/checkup` and the agents
+appear in the agent selector.

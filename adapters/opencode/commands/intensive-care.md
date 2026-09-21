@@ -1,41 +1,41 @@
 ---
-description: Lance les soins intensifs : checkup, chirurgie prescrite, puis checkups successifs jusqu'à résolution ou blocage.
+description: Launches intensive care: checkup, prescribed surgery, then successive checkups until resolution or blockage.
 agent: build
 ---
 
-# 🏥 Soins intensifs de la Clinique du Code
+# 🏥 Intensive care at the Code Clinic
 
-Tu coordonnes le protocole portable `intensive-care` en mode build.
-Commence par lire le skill `intensive-care`, puis applique-le sans modifier le
-code pendant les checkups.
+You coordinate the portable protocol `intensive-care` in build mode.
+Start by reading the skill `intensive-care`, then apply it without changing the
+code during checkups.
 
-## Périmètre
+## Perimeter
 
-Le périmètre demandé est : `$ARGUMENTS`.
-S'il est vide, utilise le travail de la session courante. Conserve exactement ce
-périmètre pendant toute la boucle.
+The requested perimeter is: `$ARGUMENTS`.
+If empty, uses work from the current session. Keep exactly this
+perimeter throughout the loop.
 
-## Protocole obligatoire
+## Mandatory protocol
 
-Pour chaque passe, dans cet ordre strict :
+For each pass, in this strict order:
 
-1. Lance un checkup complet en lecture seule, en déléguant `therapist` et
-   `diagnostician` en parallèle comme pour `/checkup`.
-2. Attends le rapport complet. Isole sa prescription actionnable : uniquement
-   les constats qui demandent une modification vérifiable.
-3. Si la prescription est vide, rends le bilan final et arrête.
-4. Si elle n'est pas vide, délègue immédiatement cette prescription au
-   `surgeon`. L'appel explicite de cette commande vaut consentement pour les
-   prescriptions successives dans ce périmètre ; le surgeon ne doit toutefois
-   rien traiter en dehors de la prescription.
-5. Attends le compte rendu du surgeon, relis le diff et les validations.
-6. Si le surgeon refuse, échoue, ne produit aucune modification ou signale une
-   prescription non traitable, arrête avec un blocage explicite. N'affiche pas
-   de succès.
-7. Sinon, reboucle sur un nouveau checkup avec le même périmètre.
+1. Runs a full read-only checkup, delegating `therapist` and
+`diagnostician` in parallel as for `/checkup`.
+2. Wait for the full report. Isolates its actionable prescription: only
+findings that require a verifiable modification.
+3. If the prescription is empty, return the final report and stop.
+4. If it is not empty, immediately delegate this prescription to the
+`surgeon`. The explicit call of this command constitutes consent for the
+successive prescriptions within this scope; the surgeon must not, however,
+treat nothing outside of the prescription.
+5. Wait for the surgeon's report, reread the diff and validations.
+6. If the sucker refuses, fails, produces no changes or reports a
+untreatable prescription, stops with explicit blockage. Do not display
+of success.
+7. Otherwise, return to a new checkup with the same scope.
 
-Ne saute jamais le premier checkup, ne lance jamais le surgeon en parallèle du
-diagnostic et ne transforme pas une recommandation spéculative en opération.
-Arrête après 10 passes maximum avec la prescription restante et la raison
-d'arrêt si la boucle n'est pas terminée. Rends un bilan chronologique avec les
-prescriptions, opérations, validations, constats restants et la raison d'arrêt.
+Never skip the first checkup, never run the sucker in parallel with the
+diagnosis and does not transform a speculative recommendation into an operation.
+Stops after 10 passes maximum with remaining prescription and reason
+stop if the loop is not completed. Provide a chronological assessment with the
+prescriptions, operations, validations, remaining findings and the reason for stopping.

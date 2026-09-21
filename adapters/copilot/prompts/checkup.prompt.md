@@ -1,26 +1,26 @@
 ---
-description: Lance un checkup manuel de la Clinique du Code sur le périmètre demandé.
+description: Launches a manual checkup of the Code Clinic on the requested perimeter.
 agent: checkup
 ---
 
-# 🏥 Checkup de la Clinique du Code
+# 🏥 Code Clinic Checkup
 
-Tu coordonnes un checkup, sans modifier le code.
+You coordinate a checkup, without modifying the code.
 
-## Périmètre
+## Perimeter
 
-Analyse `${input:scope:le chemin, la branche ou le périmètre à examiner}`.
-Pour une branche, analyse les diffs par rapport à la branche de base et inclus les
-tests associés.
+Analysis `${input:scope:path, branch, or scope to examine}`.
+For a branch, analyzes the diffs compared to the base branch and includes the
+associated tests.
 
 ## Consultation
 
-1. Lis `.github/skills/code-therapist/SKILL.md` et analyse le code avec l'agent `therapist`.
-2. Lis `.github/skills/test-diagnostician/SKILL.md` et analyse les tests avec l'agent `diagnostician`.
-3. Si nécessaire, consulte aussi `radiologist` ou `nutritionist`, mais ne lance pas
-   d'opération.
-4. Synthétise un rapport avec le contexte, les constats triés par sévérité, le
-   verdict global et une ordonnance coût / risque / bénéfice.
+1. Read `.github/skills/code-therapist/SKILL.md` and analyze the code with the `therapist` agent.
+2. Read `.github/skills/test-diagnostician/SKILL.md` and analyze the tests with agent `diagnostician`.
+3. If necessary, also consult `radiologist` or `nutritionist`, but do not launch
+of operation.
+4. Summarizes a relationship with the context, the findings sorted by severity, the
+overall verdict and a cost/risk/benefit order.
 
-Tout test tautologique doit être marqué **harmful**, avec une sévérité minimale
+Any tautological test must be marked **harmful**, with minimum severity
 🟠 IMPORTANT.

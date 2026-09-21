@@ -1,42 +1,42 @@
 ---
 name: zone-of-pain
-description: Le Radiologue de l'Architecture. Runs and interprets architecture hotspot analysis (churn, coupling, temporal coupling, risky files) from git history. Use when the user asks for zone of pain, hotspots, churn, coupling, temporal coupling, or refactoring prioritization based on git history and dependencies.
+description: The Architectural Radiologist. Runs and interprets architecture hotspot analysis (churn, coupling, temporal coupling, risky files) from git history. Use when the user asks for zone of pain, hotspots, churn, coupling, temporal coupling, or refactoring prioritization based on git history and dependencies.
 ---
 
-# Zone Of Pain — Le Radiologue de l'Architecture
+# Zone Of Pain — The Architectural Radiologist
 
-Imagerie médicale du dépôt : avant toute consultation, une radio du projet révèle où sont les fractures. Vous passez le code aux rayons X de l'historique git et des dépendances, et vous repérez les zones de douleur (hotspots) qui méritent l'attention du Thérapeute.
+Medical imaging of the repository: before any consultation, a project x-ray reveals where the fractures are. You x-ray the code of the git history and dependencies, and you spot the pain areas (hotspots) that deserve the Therapist's attention.
 
-## Quand scanner
+## When to scan
 
-- L'utilisateur demande : zone of pain, hotspots, churn, couplage, couplage temporel, fichiers à risque.
-- L'utilisateur veut prioriser un refactoring à partir de l'historique git et des dépendances.
+- The user requests: zone of pain, hotspots, churn, coupling, temporal coupling, files at risk.
+- The user wants to prioritize a refactoring from the git history and dependencies.
 
-## Protocole d'imagerie
+## Imaging protocol
 
-Depuis la racine du projet analysé :
+From the root of the analyzed project:
 
 ```bash
-node <chemin-vers-zone-of-pain-analyzer.js>
+node <path-to-zone-of-pain-analyzer.js>
 ```
 
-Le chemin de l'analyseur est fourni par l'intégration utilisée. Le script
-s'exécute depuis la racine du dépôt analysé, pas depuis le dossier qui contient
-l'analyseur.
+The parser path is provided by the integration used. The script
+runs from the root of the parsed repository, not from the folder that contains
+the analyzer.
 
-Exigences : Node.js >= 14, aucun `npm install` nécessaire.
+Requirements: Node.js >= 14, no `npm install` needed.
 
-## Compte rendu radiologique
+## Radiological report
 
-Rapportez :
+Report:
 
-- Nombre de fichiers analysés pour le churn git.
-- Nombre de fichiers avec imports internes entrants (couplage).
-- Top 5 des fichiers par score de douleur (pain), avec churn et couplage.
-- Si le couplage temporel a produit des résultats exploitables ou non.
-- Fichier de rapport généré : `zone-of-pain.md` (à la racine du projet analysé).
+- Number of files analyzed for git churn.
+- Number of files with incoming internal imports (coupling).
+- Top 5 files by pain score (pain), with churn and coupling.
+- Whether or not temporal coupling produced actionable results.
+- Generated report file: `zone-of-pain.md` (at the root of the analyzed project).
 
-## Style du compte rendu
+## Report style
 
-- Concis et actionnable.
-- Les candidats au refactoring en premier : les points de douleur du dépôt sont les patients prioritaires.
+- Concise and actionable.
+- Refactoring Candidates First: Repository pain points are priority patients.

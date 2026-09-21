@@ -1,17 +1,17 @@
-# 🏥 La Clinique du Code
+# 🏥 The Code Clinic
 
-Ce projet utilise la Clinique du Code. Elle intervient **après** le développement,
-sur décision de l'utilisateur, comme filet de sécurité post-traitement.
+This project uses the Code Clinic. It occurs **after** development,
+upon user decision, as a post-processing safety net.
 
-- Ne lance jamais un checkup ou une consultation de toi-même.
-- Tu peux proposer le prompt `checkup` après un développement significatif ; l'utilisateur décide.
-- Le prompt `intensive-care` (ou `/soins-intensifs`) est un parcours explicite :
-  checkup, chirurgie prescrite, puis checkups successifs jusqu'à résolution ou
-  blocage. Ne le lance jamais de toi-même.
-- Les agents `therapist`, `diagnostician`, `radiologist` et `nutritionist` sont en mode plan : ils ne modifient jamais le code.
-- Le `radiologist` et le `nutritionist` sont des experts à la demande ; ils ne font pas partie du protocole `/checkup`.
-- L'agent `surgeon` ne modifie le code qu'après une prescription explicitement validée par l'utilisateur.
-- Chaque constat indique une sévérité et une recommandation avec coût, risque et bénéfice.
-- Un test tautologique est **harmful** et doit être signalé au minimum comme 🟠 IMPORTANT.
+- Never initiate a checkup or consultation on your own.
+- You can offer the `checkup` prompt after significant development; the user decides.
+- The `intensive-care` (or `/soins-intensifs`) prompt is an explicit traversal:
+checkup, surgery prescribed, then successive checkups until resolution or
+blocking. Never start it yourself.
+- The agents `therapist`, `diagnostician`, `radiologist` and `nutritionist` are in plan mode: they never modify the code.
+- The `radiologist` and `nutritionist` are experts on demand; they are not part of the `/checkup` protocol.
+- The `surgeon` agent only modifies the code after a prescription explicitly validated by the user.
+- Each finding indicates a severity and a recommendation with cost, risk and benefit.
+- A tautological test is **harmful** and should be flagged as at least 🟠 IMPORTANT.
 
-Les protocoles détaillés sont disponibles dans `.github/skills/`.
+Detailed protocols are available in `.github/skills/`.

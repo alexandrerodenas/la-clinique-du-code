@@ -1,92 +1,92 @@
-# 🧭 Utilisation
+# 🧭 Usage
 
-## La commande `/checkup`
+## The `/checkup` command
 
-Cette commande est fournie par les adaptateurs OpenCode et GitHub Copilot. Dans
-l'application GitHub Copilot, l'extension native enregistre `/checkup` et expose
-également l'outil de compatibilité `clinic_checkup`. Elle orchestre visiblement
-`therapist` et `diagnostician` dans la session courante ; aucun modèle n'est
-fixé, donc les sous-agents héritent du modèle de la session parente. Dans VS
-Code, elle est fournie par le prompt file `.github/prompts/checkup.prompt.md`.
-Le protocole de checkup reste réutilisable par d'autres intégrations.
+This command is provided by the OpenCode and GitHub Copilot adapters. In
+the GitHub Copilot application, the native extension registers `/checkup` and
+also exposes the `clinic_checkup` compatibility tool. It orchestrates
+`therapist` and `diagnostician` in the current session; no model is
+fixed, so the subagents inherit the model from the parent session. In VS
+Code, it is provided by the prompt file `.github/prompts/checkup.prompt.md`.
+The checkup protocol remains reusable by other integrations.
 
-Dans OpenCode, elle est installée comme commande. Dans VS Code, elle apparaît
-dans le chat Copilot grâce au prompt file `.github/prompts/checkup.prompt.md`.
+In OpenCode it is installed as a command. In VS Code it appears
+in the Copilot chat using the prompt file `.github/prompts/checkup.prompt.md`.
 
-Une commande, deux praticiens, un rapport.
-
-```bash
-/checkup                                # consultation sur le travail de la session
-/checkup <chemin>                       # consultation sur un périmètre précis
-/checkup branch:<branche>               # consultation sur les diffs d'une branche (vs la base)
-```
-
-`/checkup` ouvre le dossier patient, puis :
-
-1. **Le Thérapeute du Code** examine le code source du périmètre ;
-2. **Le Diagnosticien des Tests** passe les tests au laboratoire, mesure leur
-   durée et signale tout test dépassant 5 secondes, ainsi que les timeouts et
-   blocages ;
-3. La clinique produit un **rapport de checkup** : constats par sévérité, verdict
-   global (✅ sain / ⚠️ soins nécessaires / ❌ hospitalisation) et ordonnance priorisée.
-
-> ⚠️ Règle d'or de la clinique : **aucune opération pendant un checkup**. Les
-> praticiens diagnostiquent et prescrivent. L'opération (le refactoring) ne se fait
-> qu'avec l'accord explicite du patient — l'utilisateur.
-
-## Le mode soins intensifs
-
-Les adaptateurs OpenCode et Copilot proposent aussi `/intensive-care`, avec
-`/soins-intensifs` comme alias français. C'est le seul mode qui enchaîne
-automatiquement le diagnostic et l'opération, et il reste entièrement opt-in :
-le lancement explicite de la commande vaut consentement pour les prescriptions
-successives dans le périmètre fourni.
+One command, two practitioners, one report.
 
 ```bash
-/intensive-care                         # session courante
-/intensive-care <chemin>                # périmètre précis
-/intensive-care branch:<branche>        # diffs d'une branche vs la base
-/soins-intensifs <chemin>               # alias français
+/checkup                                # consult the current session's work
+/checkup <path>                         # consult a specific scope
+/checkup branch:<branch>                # consult a branch diff (against the base)
 ```
 
-Le protocole lance un checkup, transmet sa prescription actionnable au
-Chirurgien, vérifie le résultat, puis relance un checkup avec le même périmètre.
-Il s'arrête quand il n'y a plus de prescription, en cas de refus ou d'échec,
-d'absence de progrès, ou après 10 passes. Chaque passe et sa raison d'arrêt
-figurent dans le bilan final. Une recommandation spéculative ou non actionnable
-ne déclenche pas d'opération.
+`/checkup` opens the patient file, then:
 
-## Les consultations à la demande
+1. **The Code Therapist** examines the source code in scope;
+2. **The Test Diagnostician** runs the tests in the laboratory, measures their
+   duration, and reports any test exceeding 5 seconds, as well as timeouts and
+   hangs;
+3. The Clinic produces a **checkup report**: findings by severity, verdict
+overall (✅ healthy / ⚠️ necessary care / ❌ hospitalization) and prioritized prescription.
 
-Chaque praticien est consultable seul, quand vous en avez besoin :
+> ⚠️ Golden rule of the clinic: **no operations during a checkup**. The
+> practitioners diagnose and prescribe. The operation (refactoring) is performed
+> only with the explicit consent of the patient — the user.
+
+## Intensive care mode
+
+The OpenCode and Copilot adapters also offer `/intensive-care`, with
+`/soins-intensifs` as French alias. This is the only mode that connects
+automatically diagnose and operate, and it remains fully opt-in:
+explicitly launching the command constitutes consent for successive prescriptions
+within the provided scope.
 
 ```bash
-analyse la zone of pain de ce dépôt    # scan radiologique (churn + couplage)
-consultation du nutritionniste sur src/    # vérifier que ce code doit exister
-consulte le thérapeute sur mon code    # revue de qualité ciblée
+/intensive-care                         # current session
+/intensive-care <path>                  # specific scope
+/intensive-care branch:<branch>         # branch diff against the base
+/soins-intensifs <path>               # French alias
 ```
 
-Les agents de la Clinique sont invocables par l'utilisateur uniquement. Ils ne
-sont pas sélectionnés automatiquement par le modèle ; `/checkup` lance le
-coordinateur du checkup dans la session courante.
+The protocol launches a checkup, transmits its actionable prescription to the
+Surgeon, checks the result, then reruns a checkup with the same scope.
+It stops when there is no longer a prescription, in the event of refusal or failure,
+no progress, or after 10 passes. Each pass and its reason for stopping
+appear in the final balance sheet. A speculative or non-actionable recommendation
+does not trigger an operation.
 
-Après un développement significatif, votre assistant peut vous **inviter** à lancer un
-checkup :
+## On-demand consultations
 
-> « Le développement est terminé. Souhaitez-vous que je lance un checkup de la
-> Clinique du Code avant la recette ? »
-
-À vous de décider. C'est le contrat.
-
-## Le passage au bloc
-
-Quand un rapport (checkup, consultation, radiologie) contient des soins à opérer,
-confiez la prescription au **Chirurgien** :
+Each practitioner can be consulted individually when you need it:
 
 ```bash
-fais opérer la prescription du checkup par le chirurgien
+analyze this repository's zone of pain    # radiological scan (churn + coupling)
+consult the Nutritionist about src/    # verify that this code is necessary
+ask the Therapist to review my code    # focused quality review
 ```
 
-Le Chirurgien découpe l'ordonnance en lots, dispatch un sous-agent par lot, vérifie
-les diffs et les tests, puis rend un compte rendu post-opératoire. Jamais d'opération
-sans prescription validée — et jamais d'opération au-delà de la prescription.
+Clinic agents can only be invoked by the user. They are not automatically
+selected by the model; `/checkup` launches the checkup coordinator in the
+current session.
+
+After significant development, your assistant may **invite** you to initiate a
+checkup:
+
+> “The development is complete. Would you like me to run a Code Clinic checkup
+> before acceptance testing?”
+
+It's up to you. It's the contract.
+
+## The transition to the block
+
+When a report (checkup, consultation, radiology) contains treatment to be operated on,
+entrust the prescription to the **Surgeon**:
+
+```bash
+have the Surgeon execute the checkup prescription
+```
+
+The Surgeon divides the prescription into batches, dispatches a sub-agent per batch,
+checks the diffs and tests, then provides a post-operative report. Never an operation
+without a validated prescription — and never an operation beyond the prescription.

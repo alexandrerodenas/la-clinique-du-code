@@ -1,67 +1,67 @@
 ---
 name: intensive-care
-description: Protocole portable des soins intensifs de la Clinique du Code. Enchaîne checkup et chirurgie jusqu'à disparition de la prescription actionnable.
+description: Portable intensive care protocol from the Code Clinic. Follows checkup and surgery until no actionable prescription remains.
 ---
 
-# Protocole des soins intensifs
+# Intensive care protocol
 
-Les soins intensifs sont un parcours explicite, lancé uniquement par l'utilisateur.
-Ils enchaînent un checkup en lecture seule et une intervention du Chirurgien, puis
-recommencent jusqu'à ce que le dernier checkup ne contienne plus de prescription
-actionnable.
+Intensive care is an explicit path, initiated only by the user.
+They carry out a read-only checkup and an intervention by the Surgeon, then
+start again until the last checkup no longer contains a prescription
+actionable.
 
-## Conditions d'entrée
+## Entry requirements
 
-- Le mode est lancé par une commande explicite de l'utilisateur.
-- Le périmètre est celui fourni à la commande ; s'il est vide, utilise le
-  périmètre de la session courante.
-- Le lancement explicite vaut consentement pour opérer les prescriptions
-  successives produites dans ce périmètre. Ce consentement ne permet pas
-  d'élargir le périmètre ni de traiter autre chose que la prescription courante.
+- The mode is initiated by an explicit command from the user.
+- The perimeter is that provided when ordering; if it is empty, use it
+scope of the current session.
+- The explicit launch constitutes consent to carry out the prescriptions
+successive prescriptions in this area. This consent does not allow
+to broaden the scope or treat anything other than the current prescription.
 
-## Boucle de soins
+## Care loop
 
-Pour chaque passe :
+For each pass:
 
-1. Lance un **checkup complet** en lecture seule, avec le même périmètre.
-2. Attends son rapport et isole uniquement les recommandations actionnables :
-   les constats qui prescrivent une modification vérifiable.
-3. Si aucune prescription actionnable ne reste, arrête les soins et rends le
-   bilan final.
-4. Transmets cette prescription au **Chirurgien** avec le consentement explicite
-   fourni par le mode soins intensifs.
-5. Le Chirurgien opère uniquement les lots prescrits, vérifie chaque lot et rend
-   son compte rendu.
-6. Si le Chirurgien refuse, échoue, ne produit aucune modification ou signale
-   qu'il ne peut pas traiter la prescription, arrête la boucle et signale
-   clairement le blocage.
-7. Sinon, relance un checkup avec le même périmètre.
+1. Runs a **full checkup** in read-only mode, with the same scope.
+2. Wait for its report and isolate only actionable recommendations:
+the findings which prescribe a verifiable modification.
+3. If no actionable prescription remains, stop treatment and return the
+final assessment.
+4. Send this prescription to the **Surgeon** with explicit consent
+provided by intensive care mode.
+5. The Surgeon only operates the prescribed batches, checks each batch and returns
+his report.
+6. If the Surgeon refuses, fails, does not produce any modification or reports
+that it cannot process the prescription, stops the loop and reports
+clearly the blockage.
+7. Otherwise, rerun a checkup with the same scope.
 
-Le rapport de chaque passe doit être conservé dans le compte rendu final :
-prescription reçue, opérations effectuées, vérifications, constats restants et
-raison d'arrêt.
+The report of each pass must be kept in the final report:
+prescription received, operations carried out, checks, remaining findings and
+reason for stopping.
 
-## Garde-fous
+## Guardrails
 
-- Ne lance jamais le Chirurgien avant d'avoir obtenu le rapport du checkup.
-- Ne considère pas une recommandation future, spéculative ou non actionnable comme
-  une raison de poursuivre la chirurgie.
-- N'élargis jamais le périmètre et ne traite jamais une amélioration opportuniste.
-- Arrête la boucle après 10 passes maximum pour éviter une récursion sans fin.
-  Dans ce cas, indique que le patient reste à revoir et liste la prescription
-  restante.
-- Un checkup reste strictement sans modification ; seul le Chirurgien peut opérer.
-- Si un checkup ou une intervention échoue, n'ignore pas l'erreur et n'affiche pas
-  de succès : arrête les soins avec l'erreur et l'état connu.
+- Never launch the Surgeon before obtaining the checkup report.
+- Do not consider a future, speculative or non-actionable recommendation as
+a reason to pursue surgery.
+- Never expand the scope or treat an opportunistic improvement.
+- Stops the loop after 10 passes maximum to avoid endless recursion.
+In this case, indicates that the patient remains to be seen and lists the prescription
+remaining.
+- A checkup remains strictly without modification; only the surgeon can operate.
+- If a checkup or intervention fails, do not ignore the error and do not display
+of success: stops the treatment with the error and the state known.
 
-## Bilan final
+## Final assessment
 
-Rends un bilan chronologique indiquant :
+Provide a chronological report indicating:
 
-- le périmètre ;
-- le nombre de passes ;
-- les prescriptions et opérations de chaque passe ;
-- les validations exécutées ;
-- les constats restants ;
-- la raison d'arrêt : patient sain, blocage, absence de progrès ou limite de
-  passes atteinte.
+- the perimeter;
+- the number of passes;
+- the requirements and operations of each pass;
+- validations performed;
+- the remaining findings;
+- the reason for stopping: healthy patient, blockage, lack of progress or limit of
+passes reached.

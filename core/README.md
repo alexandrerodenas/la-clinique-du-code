@@ -1,21 +1,21 @@
 # Core portable
 
-Le dossier `core/` contient les éléments indépendants d'un harnais d'agent :
+The `core/` folder contains the independent elements of an agent harness:
 
-- les protocoles des praticiens dans `protocols/` ;
-- les outils locaux réutilisables dans `tools/` ;
-- les principes de fonctionnement de la Clinique.
+- practitioner protocols in `protocols/`;
+- reusable local tools in `tools/`;
+- the operating principles of the Clinic.
 
-Le protocole `intensive-care` décrit le parcours explicite qui enchaîne un
-checkup, le Chirurgien et de nouveaux checkups jusqu'à disparition de la
-prescription actionnable. Chaque adaptateur traduit ce protocole dans son propre
-format de commande, sans changer ses garde-fous.
+The `intensive-care` protocol describes the explicit path which links a
+checkup, the Surgeon and new checkups until the disappearance of the
+actionable prescription. Each adapter translates this protocol into its own
+command format, without changing its guardrails.
 
-Un adaptateur est responsable de traduire ces protocoles dans le format attendu
-par un assistant de code. Les adaptateurs OpenCode et GitHub Copilot se trouvent
-respectivement dans `adapters/opencode/` et `adapters/copilot/`.
+An adapter is responsible for translating these protocols into the format
+expected by a coding assistant. The OpenCode and GitHub Copilot adapters are
+located in `adapters/opencode/` and `adapters/copilot/`, respectively.
 
-Les protocoles ne supposent ni commande particulière, ni outil de délégation,
-ni permission spécifique. L'orchestrateur qui les utilise doit garantir les
-contraintes de chaque praticien, notamment l'absence de modification pendant un
-diagnostic.
+The protocols do not require any particular command or delegation tool,
+nor specific permission. The orchestrator who uses them must guarantee the
+constraints of each practitioner, in particular the absence of modification during a
+diagnosis.
