@@ -80,10 +80,10 @@ The Clinic is organized in two layers:
 - `core/` contains the principles, protocols and tools independent of a harness;
 - `adapters/` contains the integrations specific to each code helper.
 
-The OpenCode and GitHub Copilot adapters are provided in
-`adapters/opencode/` and `adapters/copilot/`. They expose the same portable
-protocols, including `/checkup` and `/intensive-care` (alias
-`/soins-intensifs`), in their native formats.
+The OpenCode, GitHub Copilot and Claude Code adapters are provided in
+`adapters/opencode/`, `adapters/copilot/` and `adapters/claude/`. They expose
+the same portable protocols, including `/checkup` and `/intensive-care`
+(alias `/soins-intensifs`), in their native formats.
 
 ## 📦 Installation
 

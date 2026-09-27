@@ -2,15 +2,17 @@
 
 ## The `/checkup` command
 
-This command is provided by the OpenCode and GitHub Copilot adapters. In
-the GitHub Copilot application, the native extension registers `/checkup` and
-also exposes the `clinic_checkup` compatibility tool. It orchestrates
-`therapist` and `diagnostician` in the current session; no model is
-fixed, so the subagents inherit the model from the parent session. In VS
+This command is provided by the OpenCode, GitHub Copilot and Claude Code
+adapters. In the GitHub Copilot application, the native extension registers
+`/checkup` and also exposes the `clinic_checkup` compatibility tool. It
+orchestrates `therapist` and `diagnostician` in the current session; no model
+is fixed, so the subagents inherit the model from the parent session. In VS
 Code, it is provided by the prompt file `.github/prompts/checkup.prompt.md`.
 The checkup protocol remains reusable by other integrations.
 
-In OpenCode it is installed as a command. In VS Code it appears
+In OpenCode and Claude Code it is installed as a command
+(`~/.claude/commands/checkup.md` for Claude Code, dispatching `therapist` and
+`diagnostician` as subagents via the `Task` tool). In VS Code it appears
 in the Copilot chat using the prompt file `.github/prompts/checkup.prompt.md`.
 
 One command, two practitioners, one report.
@@ -36,8 +38,8 @@ overall (✅ healthy / ⚠️ necessary care / ❌ hospitalization) and prioriti
 
 ## Intensive care mode
 
-The OpenCode and Copilot adapters also offer `/intensive-care`, with
-`/soins-intensifs` as French alias. This is the only mode that connects
+The OpenCode, Copilot and Claude Code adapters also offer `/intensive-care`,
+with `/soins-intensifs` as French alias. This is the only mode that connects
 automatically diagnose and operate, and it remains fully opt-in:
 explicitly launching the command constitutes consent for successive prescriptions
 within the provided scope.

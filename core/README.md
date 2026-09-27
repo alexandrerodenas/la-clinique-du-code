@@ -12,8 +12,9 @@ actionable prescription. Each adapter translates this protocol into its own
 command format, without changing its guardrails.
 
 An adapter is responsible for translating these protocols into the format
-expected by a coding assistant. The OpenCode and GitHub Copilot adapters are
-located in `adapters/opencode/` and `adapters/copilot/`, respectively.
+expected by a coding assistant. The OpenCode, GitHub Copilot and Claude Code
+adapters are located in `adapters/opencode/`, `adapters/copilot/` and
+`adapters/claude/`, respectively.
 
 The protocols do not require any particular command or delegation tool,
 nor specific permission. The orchestrator who uses them must guarantee the

@@ -1,0 +1,41 @@
+# Ce bloc est à ajouter dans le fichier CLAUDE.md de votre configuration (global ou par projet).
+
+## 🏥 La Clinique du Code
+
+Ce projet utilise la Clinique du Code via son adaptateur Claude Code. Les principes et protocoles portables sont conservés dans le dépôt de la Clinique ; cet adaptateur fournit les agents, les skills et les commandes `/checkup` et `/intensive-care`.
+
+### Praticiens disponibles
+
+Les praticiens diagnostiques sont des **subagents en lecture seule** (diagnostic seul, jamais de modification — ils n'ont pas accès à `Edit`/`Write`). Ils s'appuient sur des skills chargées depuis `~/.claude/skills/` :
+
+- **Le Thérapeute du Code** (subagent `therapist`, skill `code-therapist`) : examine la qualité du code, son architecture, sa refactorabilité. Il détecte les vrais problèmes, diagnostique les causes racines et recommande des soins avec des trade-offs explicites.
+- **Le Diagnosticien des Tests** (subagent `diagnostician`, skill `test-diagnostician`) : passe au labo les tests unitaires. Il vérifie leur qualité, leur pertinence, leur robustesse et leur maintenabilité, et peut exécuter la suite de tests en lecture seule pour en mesurer la durée.
+- **Le Radiologue de l'Architecture** (subagent `radiologist`, skill `zone-of-pain`) : passe le dépôt aux rayons X de l'historique git. Il repère les zones de douleur (churn, couplage, couplage temporel) et priorise les fichiers à refactorer.
+- **Le Nutritionniste du Projet** (subagent `nutritionist`, skill `nutritionist`) : vérifie que le code écrit est nécessaire. Il détecte le code mort, la spéculation (YAGNI), la sur-ingénierie et le sur-dimensionnement par rapport aux usages réels.
+
+Le seul praticien en **mode build** (capable de modifier le code) :
+
+- **Le Chirurgien** (subagent `surgeon`) : opère uniquement sur prescription — un bilan d'un praticien validé par l'utilisateur. Il délègue chaque lot à des sous-agents via l'outil `Task`, lot par lot, avec vérification. N'opère jamais sans prescription.
+
+### La commande /checkup
+
+`/checkup` lance une consultation complète : elle délègue au Thérapeute du Code et au Diagnosticien des Tests (subagents en parallèle via `Task`) qui examinent le code et les tests, puis produit un rapport clinique avec verdict et ordonnance.
+
+### Les soins intensifs
+
+`/intensive-care` est un parcours explicite et consenti par l'utilisateur. Il lance un checkup, confie sa prescription actionnable au Chirurgien, puis reboucle sur un checkup avec le même périmètre. Il s'arrête quand il n'y a plus de prescription, en cas de blocage, ou après 10 passes. Il ne se lance jamais de lui-même.
+
+### Le parcours de soins
+
+- `/checkup` est le **bilan du généraliste** : la consultation d'entrée, à proposer en premier.
+- **Le Radiologue prépare le terrain** (`radiologist`) : sa radio désigne les fichiers qui saignent (churn + couplage). Il est consultable séparément, avant ou après un checkup ; il ne fait pas partie du protocole de checkup.
+- **Le Nutritionniste complète le bilan** (`nutritionist`) : il est consultable séparément pour vérifier que le code sain mais suspect **devrait** exister (code mort, sur-ingénierie, dosage). Il ne fait pas partie du protocole de checkup.
+- **Le Chirurgien opère** (`surgeon`) : une fois la prescription validée, il exécute l'ordonnance dans des sous-agents. Jamais d'opération sans bilan validé.
+- Parcours possible : radio (à la demande) → checkup → nutritionniste (à la demande) → chirurgien. Chaque expert reste consultable seul.
+
+### Philosophie : 100 % manuel
+
+- Les checkups sont **à la discrétion de l'utilisateur**. Ne lance jamais un checkup ou une commande de la Clinique de toi-même.
+- Après un développement significatif (nouvelle feature, refactoring, correction), tu **peux inviter** l'utilisateur à lancer un checkup : propose-lui `/checkup` en une phrase, il décide.
+- En fin d'itération, si des tests ont été écrits et que l'utilisateur est d'accord, le checkup est recommandé avant la recette et le commit.
+- Seul le Chirurgien modifie le code, et uniquement sur prescription validée. Les praticiens en mode diagnostic ne touchent jamais au code.

@@ -11,7 +11,7 @@ can reuse `core/` by providing its own integration.
 
 ## Prerequisites
 
-- [OpenCode](https://opencode.ai) or [GitHub Copilot in VS Code](https://code.visualstudio.com/docs/copilot/overview), depending on the chosen adapter
+- [OpenCode](https://opencode.ai), [GitHub Copilot in VS Code](https://code.visualstudio.com/docs/copilot/overview), or [Claude Code](https://claude.com/claude-code), depending on the chosen adapter
 
 ## Step 1 — Clone the clinic
 
@@ -72,6 +72,27 @@ hangs. In VS Code, the prompt
 `.github/prompts/checkup.prompt.md` provides the `/checkup` command and
 `.github/prompts/intensive-care.prompt.md` provides intensive care mode. The
 diagnostic agents remain read-only.
+
+## Claude Code
+
+From the root of the Clinic, install the adapter into your global Claude Code
+configuration:
+
+```powershell
+.\adapters\claude\install.ps1
+```
+
+The installation copies the `core/` protocols in Claude Code skill format to
+`~/.claude/skills/`, along with the subagents (`~/.claude/agents/`) and the
+`/checkup` and `/intensive-care` commands (aka `/soins-intensifs`, in
+`~/.claude/commands/`) — they will be available in all your projects. Each
+diagnostic subagent (`therapist`, `diagnostician`, `radiologist`,
+`nutritionist`) is restricted to read-only tools; only `surgeon` can use
+`Edit`, `Write`, `Bash` and `Task`, and only on a validated prescription. Add
+the block printed at the end of the installation
+([`adapters/claude/templates/CLAUDE.md.clinic`](../adapters/claude/templates/CLAUDE.md.clinic))
+to your `CLAUDE.md` (global `~/.claude/CLAUDE.md`, or per project), then
+restart Claude Code.
 
 ---
 
