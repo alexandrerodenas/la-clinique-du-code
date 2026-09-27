@@ -1,0 +1,19 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "la-clinique-du-code",
+  "description": "Marketplace for La Clinique du Code — a portable, manual post-development code clinic for Claude Code.",
+  "owner": {
+    "name": "alexandrerodenas"
+  },
+  "plugins": [
+    {
+      "name": "la-clinique-du-code",
+      "description": "Post-development code clinic: quality checkup, test diagnostics, architecture hotspots (zone of pain), and surgical refactoring on an approved prescription.",
+      "author": {
+        "name": "alexandrerodenas"
+      },
+      "source": "./plugin",
+      "homepage": "https://github.com/alexandrerodenas/la-clinique-du-code"
+    }
+  ]
+}

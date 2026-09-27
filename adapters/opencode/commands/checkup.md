@@ -1,5 +1,5 @@
 ---
-description: Complete checkup of the Code Clinic. The Code Therapist examines the code, the Test Diagnostician examines the tests. Scope: working tree, path, or branch (diffs). Produces a clinical report with verdict.
+description: "Complete checkup of the Code Clinic. The Code Therapist examines the code, the Test Diagnostician examines the tests. Scope: working tree, path, or branch (diffs). Produces a clinical report with verdict."
 agent: build
 ---
 

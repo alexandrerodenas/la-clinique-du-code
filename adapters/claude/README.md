@@ -1,5 +1,11 @@
 # Claude Code Adapter
 
+> **Prefer a managed install?** See [`../../plugin/`](../../plugin/) — the
+> same protocols packaged as a Claude Code plugin, installable with
+> `claude plugin marketplace add alexandrerodenas/la-clinique-du-code`. This
+> manual adapter remains for anyone who wants the files copied straight
+> into their global `~/.claude/` config instead.
+
 This adapter translates the portable protocols of `core/` into
 conventions used by [Claude Code](https://claude.com/claude-code):
 

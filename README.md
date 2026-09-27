@@ -87,6 +87,17 @@ the same portable protocols, including `/checkup` and `/intensive-care`
 
 ## 📦 Installation
 
+**Claude Code**, as a plugin (recommended):
+
+```
+claude plugin marketplace add alexandrerodenas/la-clinique-du-code
+claude plugin install la-clinique-du-code@la-clinique-du-code
+```
+
+See [**plugin/README.md**](plugin/README.md) for details, or
+[**adapters/claude/**](adapters/claude/) for the manual/global install
+script instead.
+
 See [**docs/installation.md**](docs/installation.md) for installing the
 OpenCode and GitHub Copilot adapters and using the portable core.
 

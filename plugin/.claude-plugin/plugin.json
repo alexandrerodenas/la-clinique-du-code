@@ -1,0 +1,12 @@
+{
+  "name": "la-clinique-du-code",
+  "version": "1.0.0",
+  "description": "A portable, manual post-development code clinic: quality checkup, test diagnostics, architecture hotspots (zone of pain), and surgical refactoring on an approved prescription.",
+  "author": {
+    "name": "alexandrerodenas"
+  },
+  "homepage": "https://github.com/alexandrerodenas/la-clinique-du-code",
+  "repository": "https://github.com/alexandrerodenas/la-clinique-du-code",
+  "license": "MIT",
+  "keywords": ["code-review", "code-quality", "refactoring", "testing", "architecture", "clean-code", "zone-of-pain"]
+}
