@@ -44,6 +44,20 @@ never impose it.
 
 The configuration is loaded at startup. Exit and restart OpenCode.
 
+## GitHub Copilot CLI
+
+From the repository root, install the Agent Plugins 1.0 package to make the
+portable Clinic skills available in Copilot CLI:
+
+```powershell
+copilot plugin install .\plugin
+copilot plugin list
+```
+
+In an interactive Copilot CLI session, run `/skills list` to verify that the
+skills are available. For the Copilot application and VS Code integration,
+including its agents, prompts and native extension, use the adapter below.
+
 ## GitHub Copilot application and GitHub Copilot in VS Code
 
 From the root of the Clinic, install the adapter in the target project:

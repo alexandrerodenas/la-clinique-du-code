@@ -1,0 +1,21 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "la-clinique-du-code",
+  "description": "A portable set of manual post-development code clinic skills for code quality, tests, architecture, and surgical refactoring.",
+  "version": "1.0.0",
+  "author": {
+    "name": "alexandrerodenas"
+  },
+  "homepage": "https://github.com/alexandrerodenas/la-clinique-du-code",
+  "repository": "https://github.com/alexandrerodenas/la-clinique-du-code",
+  "license": "MIT",
+  "keywords": [
+    "code-review",
+    "code-quality",
+    "refactoring",
+    "testing",
+    "architecture",
+    "clean-code",
+    "zone-of-pain"
+  ]
+}

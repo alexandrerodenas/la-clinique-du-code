@@ -98,6 +98,12 @@ See [**plugin/README.md**](plugin/README.md) for details, or
 [**adapters/claude/**](adapters/claude/) for the manual/global install
 script instead.
 
+**GitHub Copilot CLI**, for the portable Clinic skills:
+
+```
+copilot plugin install ./plugin
+```
+
 See [**docs/installation.md**](docs/installation.md) for installing the
 OpenCode and GitHub Copilot adapters and using the portable core.
 
