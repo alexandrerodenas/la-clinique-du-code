@@ -10,6 +10,11 @@ You open the Code Clinic. Two practitioners will examine the user's patient file
 **Scope of consultation:** $ARGUMENTS
 (if empty: covers the code and tests developed in the current session, or ask the user to specify the scope)
 
+Use the original request, supplied specification or acceptance criteria as the
+functional contract when available. Pass that evidence to the Code Therapist.
+If no usable contract is available, report spec compliance as not assessed;
+do not invent requirements.
+
 ## Checkup protocol
 
 1. **Preparation of the patient file** — Clearly identify the scope:
@@ -17,6 +22,7 @@ You open the Code Clinic. Two practitioners will examine the user's patient file
    - **Branch**: `/checkup branch:<name>` → files modified by the branch compared to the base branch
    - The associated test files
    - The type of project and its context (calibration necessary for practitioners)
+   - The original request, specification or acceptance criteria, if available
 
 For **branch mode**:
    - Determine the base: the default branch of the remote (`git remote show origin`, or `origin/HEAD`)
@@ -26,7 +32,7 @@ For **branch mode**:
 
 **Branch mode**: the branch must be present locally (fetch beforehand if necessary). If the branch does not exist or if the diff is empty, warn the user and stop the consultation.
 
-2. **Code Therapist Consultation** — Launch the `therapist` subagent (`Task` tool, `subagent_type: therapist`) with the patient file (scope + project context) as input. It loads the `code-therapist` skill itself and applies the complete protocol: understand the context, detect problems, assess severity, diagnose root causes, recommend with trade-offs.
+2. **Code Therapist Consultation** — Launch the `therapist` subagent (`Task` tool, `subagent_type: therapist`) with the patient file (scope + project context + original request/specification or acceptance criteria when available) as input. It loads the `code-therapist` skill itself and applies the complete protocol: assess spec compliance when criteria are available, understand the context, detect problems, assess severity, diagnose root causes and recommend with trade-offs.
 
 3. **Test Diagnostician Analysis** — Launch the `diagnostician` subagent (`Task` tool, `subagent_type: diagnostician`) with test files in scope as input. It loads the `test-diagnostician` skill itself and reviews the tests with its complete checklist (readability, structure, isolation, relevance of assertions, etc.).
 
@@ -44,6 +50,9 @@ The two consultations can be launched **in parallel** (two `Task` calls in the s
 
 ### Observation of the Code Therapist (code-therapist)
 (Summary of the consultation: strengths, findings by severity 🔴🟠🟡🔵, main root cause)
+
+### Spec compliance
+(Requirements met, evidence-backed mismatches, or **not assessed** when no usable contract was available)
 
 ### Analysis of the Test Diagnostician (test-diagnostician)
 (Summary: laboratory verdict, findings, quality of coverage and robustness)

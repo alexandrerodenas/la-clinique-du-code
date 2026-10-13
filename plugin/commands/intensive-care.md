@@ -1,5 +1,5 @@
 ---
-description: Launches intensive care at the Code Clinic — checkup, prescribed surgery, then successive checkups until resolution or blockage.
+description: Launches intensive care at the Code Clinic — operates on critical and important findings, then stops when none remain.
 argument-hint: [path|branch:<name>]
 ---
 
@@ -18,12 +18,12 @@ If empty, use the work of the current session. Keep exactly this perimeter throu
 For each pass, in this strict order:
 
 1. Run a full read-only checkup, delegating `therapist` and `diagnostician` (via the `Task` tool) in parallel, as for `/checkup`.
-2. Wait for the full report. Isolate only its actionable prescription: findings that require a verifiable modification.
-3. If no actionable prescription remains, return the final report and stop.
-4. If it is not empty, immediately delegate this prescription to the `surgeon` (via the `Task` tool). The explicit call of this command constitutes consent for the successive prescriptions within this scope; the surgeon must not treat anything outside of the current prescription.
+2. Wait for the full report. Isolate only actionable 🔴 CRITICAL or 🟠 IMPORTANT findings that require a verifiable modification.
+3. If no such finding remains, stop operating and return the final report. Report remaining 🟡 MODERATE or 🔵 MINOR findings as deferred; they do not trigger another operation or pass.
+4. If findings remain, immediately delegate only those critical and important findings to the `surgeon` (via the `Task` tool). The explicit call of this command constitutes consent for successive prescriptions within this scope; the surgeon must not treat anything outside the current prescription or operate on lower-severity findings.
 5. Wait for the surgeon's report, reread the diff and validations.
 6. If the surgeon refuses, fails, produces no modification or reports an untreatable prescription, stop the loop and report the blockage clearly. Do not display artificial success.
 7. Otherwise, restart a checkup with the same scope.
 
 Never skip the first checkup, never run the surgeon in parallel with the diagnosis, and never turn a speculative recommendation into an operation.
-Stop after 10 passes maximum with the remaining prescription and reason for stopping if the loop is not completed. Provide a chronological report with the prescriptions, operations, checks, remaining findings and reason for stopping.
+The 10-pass limit is a safety cap, not a target: stop earlier as soon as no actionable 🔴/🟠 finding remains. If the cap is reached, list the unresolved critical and important findings. Provide a chronological report with the prescriptions, operations, checks, remaining findings and reason for stopping.

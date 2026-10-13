@@ -21,8 +21,9 @@ node <path-to-zone-of-pain-analyzer.js>
 ```
 
 The parser path is provided by the integration used. The script
-runs from the root of the parsed repository, not from the folder that contains
-the analyzer.
+runs from the root of the analyzed repository, not from the folder that contains
+the analyzer. It discovers common source roots, including `source/`, and prints
+its report to standard output without writing files.
 
 Requirements: Node.js >= 14, no `npm install` needed.
 
@@ -34,7 +35,7 @@ Report:
 - Number of files with incoming internal imports (coupling).
 - Top 5 files by pain score (pain), with churn and coupling.
 - Whether or not temporal coupling produced actionable results.
-- Generated report file: `zone-of-pain.md` (at the root of the analyzed project).
+- Findings and tables are included in the command output; no report file is generated.
 
 ## Report style
 

@@ -4,14 +4,24 @@ const checkupInstructions = (scope) => `Tu coordonnes un checkup de La Clinique 
 
 Perimetre a examiner : ${scope || "le travail de la session courante"}.
 
+Utilise la demande initiale, la specification ou les criteres d'acceptation
+explicites comme contrat fonctionnel lorsqu'ils sont disponibles, et transmets
+ces elements au therapist. Si aucun contrat exploitable n'est accessible,
+indique que la conformite a la spec n'a pas ete evaluee ; n'invente pas
+d'exigences.
+
 Lis les protocoles necessaires dans .github/skills/ puis delegue en parallele :
-1. le Therapeute du Code (agent therapist) pour le code et l'architecture ;
+1. le Therapeute du Code (agent therapist) pour la qualite, l'architecture et
+   la conformite a la spec lorsqu'elle peut etre evaluee ;
 2. le Diagnosticien des Tests (agent diagnostician) pour les tests.
 Les deux agents sont strictement en lecture seule. Le radiologist et le
 nutritionist sont des experts a la demande et ne font pas partie du protocole
 de checkup.
 
-Rends un rapport avec le contexte, les constats tries par severite, les fichiers et lignes concernes, le verdict global et une ordonnance priorisee avec cout, risque et benefice. Un test tautologique est harmful et doit etre signale au minimum comme IMPORTANT.
+Rends un rapport avec le contexte, la conformite a la spec (ou "non evaluee"),
+les constats tries par severite, les fichiers et lignes concernes, le verdict
+global et une ordonnance priorisee avec cout, risque et benefice. Un test
+tautologique est harmful et doit etre signale au minimum comme IMPORTANT.
 
 Ne modifie jamais le code, les tests ou la configuration pendant ce checkup.
 Ne demande pas au surgeon d'intervenir pendant le checkup.`;
@@ -28,12 +38,13 @@ modification hors prescription.
 Pour chaque passe, dans cet ordre strict :
 1. Lance un checkup complet en lecture seule, comme /checkup, avec therapist et
    diagnostician en parallele.
-2. Attends le rapport complet et isole uniquement les recommandations
-   actionnables, c'est-a-dire les constats qui demandent une modification
-   verifiable.
-3. Si la prescription actionnable est vide, rends le bilan final et arrete.
-4. Sinon, delegue exactement cette prescription au surgeon. Il ne traite rien
-   d'autre.
+2. Attends le rapport complet et isole uniquement les constats actionnables
+   🔴 CRITICAL ou 🟠 IMPORTANT qui demandent une modification verifiable.
+3. S'il ne reste aucun constat 🔴/🟠, arrete les operations et rends le bilan
+   final. Signale les constats 🟡/🔵 restants comme differes ; ils ne declenchent
+   ni chirurgie ni nouvelle passe.
+4. Sinon, delegue exactement ces constats 🔴/🟠 au surgeon. Il ne traite rien
+   d'autre ; les constats 🟡/🔵 restent hors prescription.
 5. Attends son compte rendu, relis le diff et les validations.
 6. Si le surgeon refuse, echoue, ne produit aucune modification ou signale une
    prescription non traitable, arrete avec un blocage explicite. N'affiche pas
@@ -42,9 +53,10 @@ Pour chaque passe, dans cet ordre strict :
 
 Ne saute jamais le premier checkup et ne lance jamais le surgeon en parallele du
 diagnostic. Ne transforme pas une recommandation speculative en operation.
-Arrete apres 10 passes maximum avec la prescription restante et la raison
-d'arret. Rends un bilan chronologique avec prescriptions, operations,
-validations, constats restants et raison d'arret.`;
+Les 10 passes constituent un plafond de securite, pas un objectif : arrete plus
+tot des qu'il ne reste aucun constat actionnable 🔴/🟠. Si ce plafond est atteint,
+liste les constats 🔴/🟠 non resolus. Rends un bilan chronologique avec les
+prescriptions, operations, validations, constats restants et raison d'arret.`;
 
 const customAgents = [
     {
@@ -56,7 +68,7 @@ const customAgents = [
         infer: false,
         skills: ["code-therapist"],
         prompt:
-            "Tu es le Therapeute du Code, en mode plan et lecture seule. Lis le skill code-therapist, analyse le perimetre fourni, puis rends un diagnostic avec causes racines, severites et recommandations. Ne modifie jamais aucun fichier.",
+            "Tu es le Therapeute du Code, en mode plan et lecture seule. Lis le skill code-therapist, analyse le perimetre fourni et verifie la conformite a la demande initiale ou aux criteres d'acceptation explicites lorsqu'ils sont disponibles. Cite les exigences et les preuves ; si aucune spec n'est accessible, indique que la conformite n'a pas ete evaluee sans inventer d'exigences. Rends un diagnostic avec causes racines, severites et recommandations. Ne modifie jamais aucun fichier.",
     },
     {
         name: "diagnostician",
@@ -141,7 +153,7 @@ const session = await joinSession({
         {
             name: "intensive-care",
             description:
-                "Lance les soins intensifs : checkup, chirurgie prescrite et checkups successifs jusqu'a resolution ou blocage.",
+                "Lance les soins intensifs : opere uniquement les constats CRITICAL et IMPORTANT et s'arrete lorsqu'il n'en reste plus.",
             handler: async ({ args }) => {
                 await runIntensiveCare(args?.trim());
             },
@@ -183,7 +195,7 @@ const session = await joinSession({
         {
             name: "clinic_intensive_care",
             description:
-                "Lance les soins intensifs et boucle entre checkup et surgeon jusqu'a resolution ou blocage.",
+                "Lance les soins intensifs et opere uniquement les constats CRITICAL et IMPORTANT jusqu'a leur resolution ou un blocage.",
             parameters: {
                 type: "object",
                 properties: {

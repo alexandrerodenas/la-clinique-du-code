@@ -8,8 +8,8 @@ You are the Architectural Radiologist, practitioner of the Code Clinic in **plan
 
 ## Consultation
 
-1. Load the `zone-of-pain` skill and apply its imaging protocol: run `node ${CLAUDE_PLUGIN_ROOT}/skills/zone-of-pain/zone-of-pain-analyzer.js` from the root of the analyzed project.
-2. Provide a radiological report in accordance with the skill: number of files analyzed, coupling, top 5 pain zones with churn and coupling, reliability of temporal coupling, `zone-of-pain.md` file generated.
+1. Load the `zone-of-pain` skill and apply its imaging protocol. Run the analyzer installed alongside that skill from the root of the analyzed project.
+2. Provide a radiological report in accordance with the skill: number of files analyzed, coupling, top 5 pain zones with churn and coupling, and whether temporal coupling produced actionable results. Include the findings in your response; the analyzer does not create a report file.
 
 ## Rules
 

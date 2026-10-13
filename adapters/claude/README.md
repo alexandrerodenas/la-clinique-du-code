@@ -6,23 +6,21 @@
 > manual adapter remains for anyone who wants the files copied straight
 > into their global `~/.claude/` config instead.
 
-This adapter translates the portable protocols of `core/` into
-conventions used by [Claude Code](https://claude.com/claude-code):
+This adapter installs the portable protocols of `core/` into
+[Claude Code](https://claude.com/claude-code). It reuses the plugin's
+Claude-compatible agents and commands, so the managed plugin and manual
+installation share one definition:
 
 - `~/.claude/skills/<name>/SKILL.md` for practitioner protocols (copied
   verbatim from `core/protocols/`, since their front matter already matches
   Claude Code's skill format);
-- `~/.claude/agents/*.md` for the practitioners, as Claude Code subagents —
+- `~/.claude/agents/*.md` for the practitioners, copied from `plugin/agents/` —
   each diagnostic practitioner (`therapist`, `diagnostician`, `radiologist`,
   `nutritionist`) is restricted to read-only tools (`Read`, `Grep`, `Glob`,
   and `Bash` only where the protocol requires running something read-only);
   `surgeon` is the only subagent with `Edit`, `Write`, `Bash` and `Task`;
-- `~/.claude/commands/checkup.md` for the manual `/checkup` command;
-- `~/.claude/commands/intensive-care.md` (and its alias
-  `soins-intensifs.md`) for the `/intensive-care` loop;
-- `templates/CLAUDE.md.clinic` — the block to add to your `CLAUDE.md`
-  (global or per-project) so your assistant knows about the Clinic and can
-  suggest, but never impose, a checkup.
+- `~/.claude/commands/*.md` for `/checkup`, `/intensive-care` and the short
+  `/soins-intensifs` alias, copied from `plugin/commands/`.
 
 The zone-of-pain analyzer is copied to
 `~/.claude/skills/zone-of-pain/zone-of-pain-analyzer.js`.
@@ -35,11 +33,9 @@ From the root of the Clinic:
 .\adapters\claude\install.ps1
 ```
 
-The script installs the protocols as skills, the subagents, and the
-`/checkup` / `/intensive-care` commands in your global Claude Code
-configuration (`~/.claude/`) — they will be available in every project.
-It then prints the `CLAUDE.md` block to add by hand; it never edits an
-existing `CLAUDE.md` for you.
+The script installs the protocols as skills, the shared subagents and the
+commands in your global Claude Code configuration (`~/.claude/`) — they will
+be available in every project. No `CLAUDE.md` block is required.
 
 ## Usage
 
@@ -49,8 +45,8 @@ Once installed, restart Claude Code. Then:
   `diagnostician` in parallel (via the `Task` tool) and produces a clinical
   report with a prioritized prescription.
 - `/intensive-care [path|branch:<name>]` (alias `/soins-intensifs`) —
-  loops checkup → surgeon → checkup until the prescription is exhausted,
-  a blockage occurs, or 10 passes are reached.
+  operates only on actionable 🔴 CRITICAL and 🟠 IMPORTANT findings, stops
+  when none remain, and uses 10 passes only as a safety cap.
 - Each practitioner can also be summoned directly, by name, for an on-demand
   consultation (e.g. "consult the radiologist on this repo's zone of pain").
 

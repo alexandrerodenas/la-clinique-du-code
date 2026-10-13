@@ -102,11 +102,9 @@ The installation copies the `core/` protocols in Claude Code skill format to
 `~/.claude/commands/`) — they will be available in all your projects. Each
 diagnostic subagent (`therapist`, `diagnostician`, `radiologist`,
 `nutritionist`) is restricted to read-only tools; only `surgeon` can use
-`Edit`, `Write`, `Bash` and `Task`, and only on a validated prescription. Add
-the block printed at the end of the installation
-([`adapters/claude/templates/CLAUDE.md.clinic`](../adapters/claude/templates/CLAUDE.md.clinic))
-to your `CLAUDE.md` (global `~/.claude/CLAUDE.md`, or per project), then
-restart Claude Code.
+`Edit`, `Write`, `Bash` and `Task`, and only on a validated prescription. The
+manual adapter reuses the agents and commands from `plugin/`; no `CLAUDE.md`
+block is required. Restart Claude Code after installation.
 
 ---
 
@@ -148,7 +146,9 @@ and all those who appear in the future)
 5. Install the commands:
    - copy <tmp>\adapters\opencode\commands\checkup.md to <config>\commands\checkup.md
    - copy <tmp>\adapters\opencode\commands\intensive-care.md to
-<config>\commands\intensive-care.md and <config>\commands\soins-intensifs.md
+     <config>\commands\intensive-care.md
+   - copy <tmp>\adapters\opencode\commands\soins-intensifs.md to
+     <config>\commands\soins-intensifs.md
 
 6. Install the clinic prompt system:
    - read the file <tmp>\adapters\opencode\templates\AGENTS.md.clinic

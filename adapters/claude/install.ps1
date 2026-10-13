@@ -5,6 +5,7 @@ $ErrorActionPreference = "Stop"
 
 $adapterRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot = Split-Path -Parent (Split-Path -Parent $adapterRoot)
+$pluginRoot = Join-Path $repoRoot "plugin"
 $claudeConfig = Join-Path $env:USERPROFILE ".claude"
 $skillsTarget = Join-Path $claudeConfig "skills"
 $commandsTarget = Join-Path $claudeConfig "commands"
@@ -32,25 +33,18 @@ Copy-Item -LiteralPath $analyzerSource -Destination $analyzerTarget -Force
 
 Write-Host "  ➜ Installation des subagents (praticiens + chirurgien)..."
 New-Item -ItemType Directory -Path $agentsTarget -Force | Out-Null
-Get-ChildItem -LiteralPath (Join-Path $adapterRoot "agents") -File -Filter "*.md" | ForEach-Object {
+Get-ChildItem -LiteralPath (Join-Path $pluginRoot "agents") -File -Filter "*.md" | ForEach-Object {
     Write-Host "    - $($_.BaseName)"
     Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $agentsTarget $_.Name) -Force
 }
 
-Write-Host "  ➜ Installation de la commande /checkup..."
+Write-Host "  ➜ Installation des commandes..."
 New-Item -ItemType Directory -Path $commandsTarget -Force | Out-Null
-Copy-Item -LiteralPath (Join-Path $adapterRoot "commands\checkup.md") -Destination (Join-Path $commandsTarget "checkup.md") -Force
-Write-Host "  ➜ Installation de la commande /intensive-care (alias /soins-intensifs)..."
-Copy-Item -LiteralPath (Join-Path $adapterRoot "commands\intensive-care.md") -Destination (Join-Path $commandsTarget "intensive-care.md") -Force
-Copy-Item -LiteralPath (Join-Path $adapterRoot "commands\intensive-care.md") -Destination (Join-Path $commandsTarget "soins-intensifs.md") -Force
+Get-ChildItem -LiteralPath (Join-Path $pluginRoot "commands") -File -Filter "*.md" | ForEach-Object {
+    Write-Host "    - /$($_.BaseName)"
+    Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $commandsTarget $_.Name) -Force
+}
 
 Write-Host "`n  ✅ Installation terminée. Les praticiens sont prêts à recevoir vos patients.`n" -ForegroundColor Green
-
-Write-Host "  📋 Dernière étape — le système prompt de la clinique`n" -ForegroundColor Yellow
-Write-Host "  Pour que votre assistant propose naturellement des checkups, ajoutez le bloc" -ForegroundColor Yellow
-Write-Host "  suivant à votre CLAUDE.md (global : ~/.claude/CLAUDE.md, ou par projet) :`n" -ForegroundColor Yellow
-Write-Host "  -------------------------------------------------------------------------" -ForegroundColor DarkGray
-Get-Content -LiteralPath (Join-Path $adapterRoot "templates\CLAUDE.md.clinic") -Encoding UTF8 | ForEach-Object { Write-Host "  $_" -ForegroundColor DarkGray }
-Write-Host "  -------------------------------------------------------------------------`n" -ForegroundColor DarkGray
 
 Write-Host "  🚀 Redémarrez Claude Code pour que la Clinique prenne effet.`n" -ForegroundColor Cyan

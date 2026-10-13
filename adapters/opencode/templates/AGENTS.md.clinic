@@ -19,15 +19,17 @@ Le seul praticien en **mode build** (capable de modifier le code) :
 
 ### La commande /checkup
 
-`/checkup` lance une consultation complète : il dispatche le Thérapeute du Code et le Diagnosticien des Tests (sous-agents en parallèle) qui examinent le code et les tests, puis produit un rapport clinique avec verdict et ordonnance.
+`/checkup` lance une consultation complète : il dispatche le Thérapeute du Code et le Diagnosticien des Tests (sous-agents en parallèle) qui examinent le code et les tests, puis produit un rapport clinique avec verdict et ordonnance. Le Thérapeute vérifie également la conformité à la demande ou aux critères d'acceptation lorsqu'ils sont disponibles ; sinon, il indique que cet axe n'a pas été évalué.
 
 ### Les soins intensifs
 
 `/intensive-care` (alias `/soins-intensifs`) est un parcours explicite et
 consenti par l'utilisateur. Il lance un checkup, confie sa prescription
 actionnable au Chirurgien, puis reboucle sur un checkup avec le même périmètre.
-Il s'arrête quand il n'y a plus de prescription, en cas de blocage ou après
-10 passes. Il ne se lance jamais de lui-même.
+Il ne prescrit des opérations que pour les constats 🔴 CRITICAL et 🟠 IMPORTANT.
+Il s'arrête dès qu'il n'en reste plus ; les constats 🟡 MODERATE et 🔵 MINOR
+sont consignés comme différés. Le plafond de 10 passes est une sécurité, pas
+un objectif. Il ne se lance jamais de lui-même.
 
 ### Le parcours de soins
 

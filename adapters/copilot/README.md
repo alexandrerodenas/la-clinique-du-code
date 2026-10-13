@@ -34,8 +34,10 @@ target project. It does not launch a consultation automatically.
 In the GitHub Copilot application, the extension registers native commands
 `/checkup`, `/intensive-care` and `/soins-intensifs` and also exposes the tools
 `clinic_checkup` and `clinic_intensive_care` for hosts that do not present
-native commands. The coordinator launches the diagnosis in the current session; intensive care follows checkup, prescription to the surgeon and
-new checkup until resolution, blocking or 10 passes. The Diagnostician can
+native commands. The coordinator launches the diagnosis in the current session;
+intensive care operates only on actionable 🔴 CRITICAL and 🟠 IMPORTANT findings,
+stops when none remain, and uses 10 passes only as a safety cap. Lower-severity
+findings are reported as deferred. The Diagnostician can
 run unit tests for reading
 alone and reports any test exceeding 5 seconds, as well as timeouts and
 hangs. This measure completes its critical opinion on the relevance, robustness,

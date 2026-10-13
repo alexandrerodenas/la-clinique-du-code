@@ -25,7 +25,9 @@ One command, two practitioners, one report.
 
 `/checkup` opens the patient file, then:
 
-1. **The Code Therapist** examines the source code in scope;
+1. **The Code Therapist** examines code quality and compares the implementation
+   with the original request or acceptance criteria when available; otherwise
+   spec compliance is reported as not assessed;
 2. **The Test Diagnostician** runs the tests in the laboratory, measures their
    duration, and reports any test exceeding 5 seconds, as well as timeouts and
    hangs;
@@ -51,12 +53,14 @@ within the provided scope.
 /soins-intensifs <path>               # French alias
 ```
 
-The protocol launches a checkup, transmits its actionable prescription to the
-Surgeon, checks the result, then reruns a checkup with the same scope.
-It stops when there is no longer a prescription, in the event of refusal or failure,
-no progress, or after 10 passes. Each pass and its reason for stopping
-appear in the final balance sheet. A speculative or non-actionable recommendation
-does not trigger an operation.
+The protocol launches a checkup and transmits only actionable 🔴 CRITICAL and
+🟠 IMPORTANT findings to the Surgeon. It checks the result, then reruns a
+checkup with the same scope. It stops as soon as no such finding remains;
+🟡 MODERATE and 🔵 MINOR findings are reported as deferred and never trigger an
+operation. Refusal, failure or lack of progress also stops the loop. The
+10-pass limit is a safety cap, not a target. Each pass and its reason for
+stopping appear in the final balance sheet. A speculative or non-actionable
+recommendation does not trigger an operation.
 
 ## On-demand consultations
 

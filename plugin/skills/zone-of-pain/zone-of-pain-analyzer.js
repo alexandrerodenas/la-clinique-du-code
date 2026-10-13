@@ -9,7 +9,7 @@ const path = require("path");
  * ╔══════════════════════════════════════════════════════════════════╗
  * ║  ZONE-OF-PAIN ANALYZER v3 — Fixed path prefixes, test exclusions, temporal coupling ║
  * ║  Usage: node zone-of-pain-analyzer.js                           ║
- * ║  Run from the root of any git project.                          ║
+ * ║  Run from a git project root; prints the report to stdout.      ║
  * ║  Requirements: Node.js >= 14, no npm install needed.            ║
  * ╚══════════════════════════════════════════════════════════════════╝
  */
@@ -32,7 +32,7 @@ const EXCLUDE_FILES = new Set([
 const SOURCE_EXT = new Set([".java", ".js", ".jsx", ".ts", ".tsx", ".py", ".cs", ".go", ".rb", ".rs", ".kt", ".kts"]);
 
 // Source dir patterns — discovered recursively at any depth
-const SRC_PATTERNS = ["src/main/java", "src/main/ts", "src/main/js", "src", "lib", "app", "packages"];
+const SRC_PATTERNS = ["src/main/java", "src/main/ts", "src/main/js", "src", "source", "lib", "app", "packages"];
 
 // ──────────────────────────────────────────────────────────────
 // HELPER FUNCTIONS
@@ -635,11 +635,6 @@ function main() {
   console.log("  ✅ Analysis complete.");
   console.log("=".repeat(72) + "\n");
 
-  // Write report — paths are already relative to each source root
-  const outputFile = path.join(process.cwd(), "zone-of-pain.md");
-  const fullMd = `# Zone of Pain - Architecture Analysis\n${tableMd}\n${temporalMd}`;
-  fs.writeFileSync(outputFile, fullMd, "utf-8");
-  console.log(`  Report saved to: ${outputFile}\n`);
 }
 
 main();

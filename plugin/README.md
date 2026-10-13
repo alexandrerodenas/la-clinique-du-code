@@ -1,18 +1,29 @@
 # La Clinique du Code — plugins
 
 This directory packages the Code Clinic's portable protocols (see `../core/`)
-for Claude Code and GitHub Copilot CLI. It bundles:
+for Claude Code and GitHub Copilot CLI. The `skills/` files are exact copies of
+`core/protocols/`, including their skill metadata. Regenerate them after
+protocol changes with:
+
+```bash
+node scripts/sync-plugin-protocols.mjs
+```
+
+Check for drift with `node scripts/sync-plugin-protocols.mjs --check`. The
+zone-of-pain analyzer is synchronized from `core/tools/` as well.
+
+The package bundles:
 
 - `skills/` — the six portable protocols (`code-therapist`,
   `intensive-care`, `nutritionist`, `surgeon`, `test-diagnostician`,
-  `zone-of-pain`), copied verbatim from `core/protocols/`. The
-  `zone-of-pain` skill also carries its analyzer script.
+  `zone-of-pain`), synchronized from `core/protocols/`. The `zone-of-pain`
+  skill also carries its analyzer script.
 - `agents/` — the five practitioners as Claude Code subagents
   (`therapist`, `diagnostician`, `radiologist`, `nutritionist`,
   `surgeon`). Diagnostic practitioners are read-only; `surgeon` is the
   only one with `Edit`/`Write`/`Bash`/`Task`.
-- `commands/` — `/checkup`, `/intensive-care` and its alias
-  `/soins-intensifs`.
+- `commands/` — `/checkup`, `/intensive-care` and a short alias command
+  `/soins-intensifs` that delegates to the same protocol.
 
 The `plugin.json` manifest packages the portable skills for Copilot CLI using
 the Agent Plugins 1.0 format. The Copilot application and VS Code integration
@@ -42,9 +53,9 @@ session, use `/skills list` to see the Clinic's portable skills.
 
 ## Relationship to the other adapters
 
-`adapters/claude/` documents the older manual/global install (copying
-files straight into `~/.claude/`) for anyone who does not want to use the
-plugin system. This `plugin/` directory is the same protocols packaged so
-they can be managed with `claude plugin` and kept up to date with
+`adapters/claude/` provides an optional manual/global install (copying files
+straight into `~/.claude/`) for anyone who does not want to use the plugin
+system. It reuses this package's Claude agents and commands rather than
+maintaining divergent copies. The plugin can be kept up to date with
 `claude plugin update la-clinique-du-code`. `adapters/copilot/` contains the
 separate GitHub Copilot application and VS Code integration.

@@ -44,7 +44,7 @@ you call them.
 
 | Practitioner | Agent | Mode | Role |
 |---|---|---|---|
-| 🧠 Code Therapist | `therapist` | plan | Code quality, architecture, refactorability — detects real problems, diagnoses root causes, recommends with trade-offs |
+| 🧠 Code Therapist | `therapist` | plan | Code quality, architecture, refactorability and compliance with explicit requirements — evidence-based findings with trade-offs |
 | 🔬 Test Diagnostician | `diagnostician` | plan | Reviews unit tests in the laboratory: relevance, robustness, maintainability |
 | 🩻 Architectural Radiologist | `radiologist` | plan | Examines Git history and dependencies: churn, coupling, pain zones |
 | 🥗 Project Nutritionist | `nutritionist` | plan | Verifies that written code is necessary: dead code, speculation (YAGNI), over-engineering, and poor sizing |
@@ -111,7 +111,9 @@ OpenCode and GitHub Copilot adapters and using the portable core.
 
 See [**docs/usage.md**](docs/usage.md) for `/checkup` and
 `/intensive-care` (session, path, or branch), on-demand consultations, and
-the handoff to the Surgeon.
+the handoff to the Surgeon. Intensive care operates only on actionable
+🔴 CRITICAL and 🟠 IMPORTANT findings; lower-severity observations are reported
+without triggering more surgery.
 
 ---
 
