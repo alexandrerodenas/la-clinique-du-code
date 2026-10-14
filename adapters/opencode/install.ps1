@@ -43,6 +43,8 @@ Copy-Item -LiteralPath (Join-Path $adapterRoot "commands\checkup.md") -Destinati
 Write-Host "  ➜ Installation de la commande /intensive-care (alias /soins-intensifs)..."
 Copy-Item -LiteralPath (Join-Path $adapterRoot "commands\intensive-care.md") -Destination (Join-Path $commandsTarget "intensive-care.md") -Force
 Copy-Item -LiteralPath (Join-Path $adapterRoot "commands\soins-intensifs.md") -Destination (Join-Path $commandsTarget "soins-intensifs.md") -Force
+Write-Host "  ➜ Installation de la commande /security-checkup..."
+Copy-Item -LiteralPath (Join-Path $adapterRoot "commands\security-checkup.md") -Destination (Join-Path $commandsTarget "security-checkup.md") -Force
 
 Write-Host "`n  ✅ Installation terminée. Les praticiens sont prêts à recevoir vos patients.`n" -ForegroundColor Green
 

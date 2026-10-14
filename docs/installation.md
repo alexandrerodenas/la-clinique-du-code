@@ -76,7 +76,7 @@ In the GitHub Copilot application, the extension registers native commands
 `/checkup`, `/intensive-care` and `/soins-intensifs`, as well as the tools for
 `clinic_checkup` and `clinic_intensive_care` compatibility. The checkup
 coordinator launches only the `therapist` and `diagnostician` subagents in the
-current session; the `radiologist` and `nutritionist` remain available for
+current session; the `radiologist`, `nutritionist` and `immunologist` remain available for
 consultation on request. The `surgeon` is declared as an explicit subagent,
 without a forced model
 and without automatic inference: it can only intervene on prescription and
@@ -101,7 +101,7 @@ The installation copies the `core/` protocols in Claude Code skill format to
 `/checkup` and `/intensive-care` commands (aka `/soins-intensifs`, in
 `~/.claude/commands/`) — they will be available in all your projects. Each
 diagnostic subagent (`therapist`, `diagnostician`, `radiologist`,
-`nutritionist`) is restricted to read-only tools; only `surgeon` can use
+`nutritionist`, `immunologist`) is restricted to read-only tools; only `surgeon` can use
 `Edit`, `Write`, `Bash` and `Task`, and only on a validated prescription. The
 manual adapter reuses the agents and commands from `plugin/`; no `CLAUDE.md`
 block is required. Restart Claude Code after installation.
@@ -133,14 +133,14 @@ git clone https://github.com/alexandrerodenas/la-clinique-du-code.git <tmp>
 3. Install all protocols as skills:
    - for each file <tmp>\core\protocols\<name>.md, create
      <config>\skills\<name>\SKILL.md (code-therapist, test-diagnostician,
-zone-of-pain, nutritionist, and anyone else who appears in the future)
+zone-of-pain, nutritionist, immunologist, and anyone else who appears in the future)
    - copy <tmp>\core\tools\zone-of-pain-analyzer.js to
      <config>\skills\zone-of-pain\zone-of-pain-analyzer.js
 
 4. Install the agents:
    - create the <config>\agent (or agents) folder
    - copy each file <tmp>\adapters\opencode\agents\<name>.md to <config>\agent\<name>.md
-     (therapist, diagnostician, radiologist, nutritionist, surgeon,
+     (therapist, diagnostician, radiologist, nutritionist, immunologist, surgeon,
 and all those who appear in the future)
 
 5. Install the commands:
@@ -149,6 +149,8 @@ and all those who appear in the future)
      <config>\commands\intensive-care.md
    - copy <tmp>\adapters\opencode\commands\soins-intensifs.md to
      <config>\commands\soins-intensifs.md
+   - copy <tmp>\adapters\opencode\commands\security-checkup.md to
+     <config>\commands\security-checkup.md
 
 6. Install the clinic prompt system:
    - read the file <tmp>\adapters\opencode\templates\AGENTS.md.clinic
