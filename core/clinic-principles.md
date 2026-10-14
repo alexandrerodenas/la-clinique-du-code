@@ -14,6 +14,8 @@ available.
 of pain.
 - The Nutritionist checks that the code is necessary and correctly sized for
 its uses.
+- The Immunologist reviews a change for security threats reachable from
+real entry points, each with an attack path.
 - The Surgeon only executes a prescription validated by the user.
 
 ## Rules
@@ -37,8 +39,9 @@ refusal or lack of progress.
 ```text
 Radiologist (optional) -> Checkup -> Surgeon
 Nutritionist (optional) -> Surgeon
+Immunologist (/security-checkup) -> Surgeon
 ```
 
-This route is a suggestion. The Radiologist and the Nutritionist are
-experts on demand and are not part of the checkup protocol. Each
+This route is a suggestion. The Radiologist, the Nutritionist and the
+Immunologist are experts on demand and are not part of the checkup protocol. Each
 practitioner can be viewed separately.

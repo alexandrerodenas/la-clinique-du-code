@@ -69,6 +69,7 @@ Each practitioner can be consulted individually when you need it:
 ```bash
 analyze this repository's zone of pain    # radiological scan (churn + coupling)
 consult the Nutritionist about src/    # verify that this code is necessary
+/security-checkup branch:<branch>      # the Immunologist reviews a change for security threats
 ask the Therapist to review my code    # focused quality review
 ```
 

@@ -14,8 +14,8 @@ Lis les protocoles necessaires dans .github/skills/ puis delegue en parallele :
 1. le Therapeute du Code (agent therapist) pour la qualite, l'architecture et
    la conformite a la spec lorsqu'elle peut etre evaluee ;
 2. le Diagnosticien des Tests (agent diagnostician) pour les tests.
-Les deux agents sont strictement en lecture seule. Le radiologist et le
-nutritionist sont des experts a la demande et ne font pas partie du protocole
+Les deux agents sont strictement en lecture seule. Le radiologist, le
+nutritionist et l'immunologist sont des experts a la demande et ne font pas partie du protocole
 de checkup.
 
 Rends un rapport avec le contexte, la conformite a la spec (ou "non evaluee"),
@@ -102,6 +102,17 @@ const customAgents = [
         skills: ["nutritionist"],
         prompt:
             "Tu es le Nutritionniste du Projet, en mode plan et lecture seule. Lis le skill nutritionist, questionne les usages reels et identifie le code mort, la speculation ou la sur-ingenierie. Ne modifie jamais le code.",
+    },
+    {
+        name: "immunologist",
+        displayName: "Immunologiste",
+        description:
+            "Revue de securite d'un changement : menaces atteignables uniquement, chacune avec un chemin d'attaque.",
+        tools: ["grep", "glob", "view", "bash"],
+        infer: false,
+        skills: ["immunologist"],
+        prompt:
+            "Tu es l'Immunologiste, en mode plan et lecture seule. Lis le skill immunologist et applique tout son protocole : contexte en une ligne, scanners deterministes s'ils sont installes, surface d'attaque touchee par le diff, huit lentilles. Chaque constat a un emplacement path:ligne et une ligne attack. N'utilise bash que pour des scanners en lecture seule et des commandes git de lecture. N'installe rien et ne modifie jamais le code.",
     },
     {
         name: "surgeon",
@@ -238,7 +249,7 @@ const session = await joinSession({
         },
         onSessionStart: async () => {
             await session.log(
-                "La Clinique du Code est disponible via /checkup, /intensive-care, /soins-intensifs, les outils clinic_checkup et clinic_intensive_care. Sous-agents : therapist, diagnostician, radiologist, nutritionist, surgeon."
+                "La Clinique du Code est disponible via /checkup, /intensive-care, /soins-intensifs, les outils clinic_checkup et clinic_intensive_care. Sous-agents : therapist, diagnostician, radiologist, nutritionist, immunologist, surgeon."
             );
         },
     },

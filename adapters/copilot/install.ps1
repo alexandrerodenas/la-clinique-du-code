@@ -38,6 +38,7 @@ Get-ChildItem -LiteralPath (Join-Path $adapterRoot "agents") -File -Filter "*.ag
 Copy-Item -LiteralPath (Join-Path $adapterRoot "prompts\checkup.prompt.md") -Destination (Join-Path $promptsTarget "checkup.prompt.md") -Force
 Copy-Item -LiteralPath (Join-Path $adapterRoot "prompts\intensive-care.prompt.md") -Destination (Join-Path $promptsTarget "intensive-care.prompt.md") -Force
 Copy-Item -LiteralPath (Join-Path $adapterRoot "prompts\soins-intensifs.prompt.md") -Destination (Join-Path $promptsTarget "soins-intensifs.prompt.md") -Force
+Copy-Item -LiteralPath (Join-Path $adapterRoot "prompts\security-checkup.prompt.md") -Destination (Join-Path $promptsTarget "security-checkup.prompt.md") -Force
 Copy-Item -LiteralPath (Join-Path $adapterRoot "templates\copilot-instructions.md") -Destination (Join-Path $githubRoot "copilot-instructions.md") -Force
 Copy-Item -LiteralPath (Join-Path $adapterRoot "extensions\la-clinique-du-code\extension.mjs") -Destination (Join-Path $extensionsTarget "extension.mjs") -Force
 
