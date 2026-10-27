@@ -3,7 +3,7 @@
 > Take care of your code. It will take care of your mental health.
 
 ![Approach](https://img.shields.io/badge/approach-portable%20core%20%2B%20adapters-18181B)
-![Practitioners](https://img.shields.io/badge/practitioners-5-success)
+![Practitioners](https://img.shields.io/badge/practitioners-6-success)
 ![Mode](https://img.shields.io/badge/mode-manual%20%2B%20intensive%20care-important)
 ![Checkup](https://img.shields.io/badge/checkup-ready-blue)
 ![Language](https://img.shields.io/badge/language-English-9cf)
@@ -48,10 +48,11 @@ you call them.
 | 🔬 Test Diagnostician | `diagnostician` | plan | Reviews unit tests in the laboratory: relevance, robustness, maintainability |
 | 🩻 Architectural Radiologist | `radiologist` | plan | Examines Git history and dependencies: churn, coupling, pain zones |
 | 🥗 Project Nutritionist | `nutritionist` | plan | Verifies that written code is necessary: dead code, speculation (YAGNI), over-engineering, and poor sizing |
+| 🦠 Immunologist | `immunologist` | plan | Security review of a change: maps the portals of entry, hunts reachable threats, and gives each finding an attack path (`/security-checkup`) |
 | 🩺 Surgeon | `surgeon` | build | Executes an approved prescription in sub-agents, batch by batch, with verification |
 
 Each diagnostic practitioner in **plan** mode relies on a specialized skill
-(`code-therapist`, `test-diagnostician`, `zone-of-pain`, or `nutritionist`).
+(`code-therapist`, `test-diagnostician`, `zone-of-pain`, `nutritionist`, or `immunologist`).
 The Surgeon in **build** mode is the only practitioner who can modify code, and
 only within the approved prescription.
 
@@ -64,10 +65,11 @@ flowchart LR
 R["🩻 Radiologist<br/>(on request)"] -.-> C["🧑‍⚕️ /checkup<br/>general practitioner assessment"]
 C --> S["🩺 Surgeon<br/>operates the prescription"]
 N["🥗 Nutritionist<br/>(on demand)"] -.-> S
+I["🦠 Immunologist<br/>/security-checkup"] -.-> S
 ```
 
-Each expert can be consulted **individually**, on demand. The Radiologist and
-Nutritionist are not part of the `/checkup` protocol. The pathway is a
+Each expert can be consulted **individually**, on demand. The Radiologist,
+Nutritionist and Immunologist are not part of the `/checkup` protocol. The pathway is a
 suggestion, not a mandatory procedure: plan-mode agents diagnose and prescribe,
 and nothing is operated on without an approved prescription.
 

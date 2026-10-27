@@ -22,7 +22,7 @@ invent requirements.
 
 1. Read `.github/skills/code-therapist/SKILL.md` and analyze code quality and spec compliance with the `therapist` agent.
 2. Read `.github/skills/test-diagnostician/SKILL.md` and analyze the tests with agent `diagnostician`.
-3. If necessary, also consult `radiologist` or `nutritionist`, but do not launch
+3. If necessary, also consult `radiologist`, `nutritionist` or `immunologist`, but do not launch
 of operation.
 4. Summarize spec compliance, findings sorted by severity, the
 overall verdict and a cost/risk/benefit order.

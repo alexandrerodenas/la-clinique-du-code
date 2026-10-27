@@ -14,16 +14,17 @@ zone-of-pain analyzer is synchronized from `core/tools/` as well.
 
 The package bundles:
 
-- `skills/` — the six portable protocols (`code-therapist`,
-  `intensive-care`, `nutritionist`, `surgeon`, `test-diagnostician`,
-  `zone-of-pain`), synchronized from `core/protocols/`. The `zone-of-pain`
+- `skills/` — the seven portable protocols (`code-therapist`,
+  `immunologist`, `intensive-care`, `nutritionist`, `surgeon`,
+  `test-diagnostician`, `zone-of-pain`), synchronized from `core/protocols/`. The `zone-of-pain`
   skill also carries its analyzer script.
-- `agents/` — the five practitioners as Claude Code subagents
+- `agents/` — the six practitioners as Claude Code subagents
   (`therapist`, `diagnostician`, `radiologist`, `nutritionist`,
-  `surgeon`). Diagnostic practitioners are read-only; `surgeon` is the
+  `immunologist`, `surgeon`). Diagnostic practitioners are read-only; `surgeon` is the
   only one with `Edit`/`Write`/`Bash`/`Task`.
-- `commands/` — `/checkup`, `/intensive-care` and a short alias command
-  `/soins-intensifs` that delegates to the same protocol.
+- `commands/` — `/checkup`, `/intensive-care`, a short alias command
+  `/soins-intensifs` that delegates to the same protocol, and
+  `/security-checkup` for the Immunologist.
 
 The `plugin.json` manifest packages the portable skills for Copilot CLI using
 the Agent Plugins 1.0 format. The Copilot application and VS Code integration
@@ -37,7 +38,7 @@ claude plugin install la-clinique-du-code@la-clinique-du-code
 ```
 
 Restart Claude Code. Then use `/checkup [path|branch:<name>]` or
-`/intensive-care [path|branch:<name>]`, or consult a practitioner directly
+`/intensive-care [path|branch:<name>]`, `/security-checkup [path|branch:<name>]`, or consult a practitioner directly
 by name (e.g. "consult the radiologist on this repo's zone of pain").
 
 ## Install — GitHub Copilot CLI

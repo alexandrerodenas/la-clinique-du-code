@@ -16,11 +16,11 @@ installation share one definition:
   Claude Code's skill format);
 - `~/.claude/agents/*.md` for the practitioners, copied from `plugin/agents/` —
   each diagnostic practitioner (`therapist`, `diagnostician`, `radiologist`,
-  `nutritionist`) is restricted to read-only tools (`Read`, `Grep`, `Glob`,
+  `nutritionist`, `immunologist`) is restricted to read-only tools (`Read`, `Grep`, `Glob`,
   and `Bash` only where the protocol requires running something read-only);
   `surgeon` is the only subagent with `Edit`, `Write`, `Bash` and `Task`;
-- `~/.claude/commands/*.md` for `/checkup`, `/intensive-care` and the short
-  `/soins-intensifs` alias, copied from `plugin/commands/`.
+- `~/.claude/commands/*.md` for `/checkup`, `/intensive-care`, the short
+  `/soins-intensifs` alias and `/security-checkup`, copied from `plugin/commands/`.
 
 The zone-of-pain analyzer is copied to
 `~/.claude/skills/zone-of-pain/zone-of-pain-analyzer.js`.
