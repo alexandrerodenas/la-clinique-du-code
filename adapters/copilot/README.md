@@ -1,53 +1,28 @@
-# Adapter GitHub Copilot
+# GitHub Copilot adapter
 
-This adapter translates the portable protocols of `core/` into conventions
-by GitHub Copilot. It supports GitHub Copilot app and GitHub
-Copilot in VS Code:
+For GitHub Copilot in VS Code and the GitHub Copilot application. Installed
+per project:
 
-- `.github/skills/` for practitioner protocols;
-- `.github/extensions/la-clinique-du-code/extension.mjs` for native plugin
-from the GitHub Copilot application;
-- `.github/agents/` for specialist practitioners;
-- `.github/prompts/checkup.prompt.md` for manual checkup;
-- `.github/prompts/intensive-care.prompt.md` for intensive care
-(`/intensive-care`, aka `/soins-intensifs`);
-- `.github/agents/checkup.agent.md` to coordinate consultations;
-- `.github/agents/intensive-care.agent.md` to coordinate the loop
-check-up / surgery;
-- `.github/copilot-instructions.md` for the reminder of the philosophy of the
-Clinical.
-
-The zone-of-pain analyzer is copied to
-`.github/skills/zone-of-pain/zone-of-pain-analyzer.js`.
-
-## Facility
-
-From the root of the Clinic:
-
-```powershell
-.\adapters\copilot\install.ps1 -ProjectRoot C:\path\to\project
+```bash
+node scripts/install.mjs copilot --project /path/to/project   # --dry-run, --uninstall
 ```
 
-The script only creates or updates the Clinic files in the
-target project. It does not launch a consultation automatically.
+| Installed to (`<project>/.github/`) | From |
+|---|---|
+| `skills/<name>/SKILL.md` (+ analyzer) | `plugin/skills/` (generated from `core/protocols/`) |
+| `agents/<name>.agent.md` — 6 practitioners | `agents/` (generated from `core/agents/` — do not edit) |
+| `agents/checkup.agent.md`, `intensive-care.agent.md`, `security-checkup.agent.md` — coordinators | `agents/` (hand-written) |
+| `prompts/*.prompt.md` — `/checkup`, `/security-checkup`, `/intensive-care`, `/soins-intensifs` | `prompts/` |
+| `extensions/la-clinique-du-code/extension.mjs` | `extensions/` |
+| a Clinic block in `copilot-instructions.md` (between markers; your content is kept) | `templates/copilot-instructions.md` |
 
-In the GitHub Copilot application, the extension registers native commands
-`/checkup`, `/intensive-care` and `/soins-intensifs` and also exposes the tools
-`clinic_checkup` and `clinic_intensive_care` for hosts that do not present
-native commands. The coordinator launches the diagnosis in the current session;
-intensive care operates only on actionable 🔴 CRITICAL and 🟠 IMPORTANT findings,
-stops when none remain, and uses 10 passes only as a safety cap. Lower-severity
-findings are reported as deferred. The Diagnostician can
-run unit tests for reading
-alone and reports any test exceeding 5 seconds, as well as timeouts and
-hangs. This measure completes its critical opinion on the relevance, robustness,
-test isolation and maintainability; it does not replace it. All agents
-of the Clinic are user-summonable and disabled for automatic summoning
-by the model; `surgeon` is only available upon explicit invocation,
-with prescription and consent. No `model` field is sent: each
-subagent inherits the model from the parent session.
+Every agent is `user-invocable` with `disable-model-invocation: true`: the
+model never picks a Clinic agent on its own. Diagnostic agents get `read` and
+`search` tools, plus `execute` when their protocol runs read-only commands;
+only `surgeon` gets `edit`. No model is forced: agents inherit the session's.
 
-The `onUserPromptSubmitted` hook remains a compatibility bridge for versions
-of the CLI which do not yet present the native commands. In VS Code with
-GitHub Copilot, the prompt appears as the command `/checkup` and the agents
-appear in the agent selector.
+In the Copilot application, the extension registers the same four commands,
+the `clinic_checkup`, `clinic_security_checkup` and `clinic_intensive_care`
+tools for hosts without native commands, and the practitioners as subagents.
+Its `onUserPromptSubmitted` hook is a compatibility bridge for older CLI
+versions. `install.ps1` is a PowerShell wrapper around the installer.

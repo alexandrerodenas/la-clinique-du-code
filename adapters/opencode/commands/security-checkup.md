@@ -1,13 +1,19 @@
 ---
-description: "Security checkup of the Code Clinic. The Immunologist examines a change for reachable threats, each finding with an attack path."
+description: "Code Clinic security checkup: the Immunologist reviews a change for threats an attacker can actually reach, each finding with an attack path. Read-only."
 agent: immunologist
+subtask: true
 ---
 
-# 🦠 Code Clinic Security Checkup
+# 🦠 Code Clinic security checkup
 
-Read and apply the `immunologist` skill on the requested perimeter: `$ARGUMENTS`.
-If empty, use the work from the current session. For `branch:<name>`, analyze
-`git diff <base>...<name>` against the remote's default branch.
+Apply the `immunologist` skill in full on the requested scope: `$ARGUMENTS`.
 
-Never modify the code. If the user wants the findings treated, suggest
-entrusting the report to the Surgeon (`surgeon`) as a prescription.
+- Empty: the uncommitted changes (`git diff HEAD`).
+- `<path>`: those files as they are.
+- `branch:<name>`: `git diff <base>...<name>`, with the base from
+  `git symbolic-ref --short refs/remotes/origin/HEAD` (else `main`, else
+  `master`). If the branch is missing or the diff is empty, say so and stop.
+
+Never modify code. If the user wants findings treated, the report is a
+prescription for the `surgeon`: the user approves all `X` findings or a subset
+by ID.

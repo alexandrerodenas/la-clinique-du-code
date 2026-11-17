@@ -1,45 +1,10 @@
-﻿param(
-    [string]$ProjectRoot = (Get-Location).Path
+﻿# 🏥 La Clinique du Code — install of the GitHub Copilot adapter into a project.
+# Thin wrapper around the cross-platform installer: node scripts/install.mjs copilot --project <dir>
+param(
+    [string]$ProjectRoot = (Get-Location).Path,
+    [Parameter(ValueFromRemainingArguments = $true)][string[]]$Arguments
 )
-
 $ErrorActionPreference = "Stop"
-$adapterRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-$repoRoot = Split-Path -Parent (Split-Path -Parent $adapterRoot)
-$githubRoot = Join-Path $ProjectRoot ".github"
-
-if (-not (Test-Path -LiteralPath $ProjectRoot -PathType Container)) {
-    throw "Le projet cible n'existe pas : $ProjectRoot"
-}
-
-Write-Host "`n🏥 La Clinique du Code — Adaptateur GitHub Copilot`n" -ForegroundColor Cyan
-
-$skillsTarget = Join-Path $githubRoot "skills"
-$agentsTarget = Join-Path $githubRoot "agents"
-$promptsTarget = Join-Path $githubRoot "prompts"
-$extensionsTarget = Join-Path $githubRoot "extensions\la-clinique-du-code"
-New-Item -ItemType Directory -Path $skillsTarget, $agentsTarget, $promptsTarget, $extensionsTarget -Force | Out-Null
-
-Write-Host "  ➜ Installation des protocoles comme skills..."
-Get-ChildItem -LiteralPath (Join-Path $repoRoot "core\protocols") -File -Filter "*.md" | ForEach-Object {
-    $skillTarget = Join-Path $skillsTarget $_.BaseName
-    New-Item -ItemType Directory -Path $skillTarget -Force | Out-Null
-    Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $skillTarget "SKILL.md") -Force
-    Write-Host "    - $($_.BaseName)"
-}
-$analyzerTarget = Join-Path $skillsTarget "zone-of-pain\zone-of-pain-analyzer.js"
-Copy-Item -LiteralPath (Join-Path $repoRoot "core\tools\zone-of-pain-analyzer.js") -Destination $analyzerTarget -Force
-
-Write-Host "  ➜ Installation des agents..."
-Get-ChildItem -LiteralPath (Join-Path $adapterRoot "agents") -File -Filter "*.agent.md" | ForEach-Object {
-    Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $agentsTarget $_.Name) -Force
-    Write-Host "    - $($_.BaseName)"
-}
-
-Copy-Item -LiteralPath (Join-Path $adapterRoot "prompts\checkup.prompt.md") -Destination (Join-Path $promptsTarget "checkup.prompt.md") -Force
-Copy-Item -LiteralPath (Join-Path $adapterRoot "prompts\intensive-care.prompt.md") -Destination (Join-Path $promptsTarget "intensive-care.prompt.md") -Force
-Copy-Item -LiteralPath (Join-Path $adapterRoot "prompts\soins-intensifs.prompt.md") -Destination (Join-Path $promptsTarget "soins-intensifs.prompt.md") -Force
-Copy-Item -LiteralPath (Join-Path $adapterRoot "prompts\security-checkup.prompt.md") -Destination (Join-Path $promptsTarget "security-checkup.prompt.md") -Force
-Copy-Item -LiteralPath (Join-Path $adapterRoot "templates\copilot-instructions.md") -Destination (Join-Path $githubRoot "copilot-instructions.md") -Force
-Copy-Item -LiteralPath (Join-Path $adapterRoot "extensions\la-clinique-du-code\extension.mjs") -Destination (Join-Path $extensionsTarget "extension.mjs") -Force
-
-Write-Host 'Installation terminee. Utilisez /checkup, /intensive-care ou un agent de la Clinique.' -ForegroundColor Green
+$repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+& node (Join-Path $repoRoot "scripts/install.mjs") copilot --project $ProjectRoot @Arguments
+exit $LASTEXITCODE

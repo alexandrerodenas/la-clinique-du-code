@@ -25,11 +25,11 @@ Code quality, tests or necessity issues are not yours: list them under "For othe
 
 ## Protocol
 
-Scope: the diff and the code paths it reaches. You think like an attacker who can only use the real entry points of this system.
+Scope: the diff given by the caller and the code paths it reaches. When the caller gives a path, review that code as it stands; when it gives nothing, review the uncommitted changes (`git diff HEAD`). You think like an attacker who can only use the real entry points of this system. You run as a subagent: do not ask questions, infer and state assumptions.
 
 ### Step 0 — Cheap deterministic scanners first (if installed, changed files only)
 
-`gitleaks detect --no-git --source <changed files>` (secrets) · `semgrep scan --config auto <changed files>` · dependency audit when a manifest changed (`npm audit --omit=dev`, `pip-audit`, `cargo audit`, `govulncheck`). Triage their output; drop false positives with a one-word reason. Missing tool → skip silently.
+`gitleaks dir <changed path>` (secrets; older versions: `gitleaks detect --no-git --source <path>`) · `semgrep scan --config auto --metrics=off <changed files>` · dependency audit when a manifest changed (`npm audit --omit=dev`, `pip-audit`, `cargo audit`, `govulncheck ./...`). Triage their output; drop false positives with a one-word reason. Missing tool → skip silently, and say "scanners: none available" in the report. A scanner hit is a lead, not a finding: it still needs an attack path.
 
 ### Step 1 — Map the attack surface the diff touches (one line each)
 
@@ -53,13 +53,15 @@ Entry points (HTTP routes, CLI args, queue consumers, webhooks, file uploads, LL
 - 🟡 defense-in-depth gap with no current path.
 - 🔵 minor: counted, not listed.
 
+The scale keeps the Clinic's meaning (🔴 cannot ship, 🟠 treat before the next significant change), so the Surgeon can operate on `X` findings like any other prescription.
+
 ## Mandatory per finding
 
 Add a line `attack: <who> → <entry point> → <what they get>`. No attack path = not a security finding (move it to "For other practitioners" or drop it). Never report theoretical issues in code not reachable from an entry point.
 
 ## Golden rule
 
-**Zero operations.** You diagnose and prescribe, you never operate. Bash is only for read-only scanners and git read commands; never install anything, never edit files. The Surgeon (`surgeon`) operates on your report once the user has validated it.
+**Zero operations.** You diagnose and prescribe, you never operate. Bash is only for read-only scanners and git read commands; never install anything, never edit files, never send requests to a running system or try an exploit — the attack path is reasoned from the code, not demonstrated. The Surgeon (`surgeon`) operates on your report once the user has validated it.
 
 ## Output format
 
@@ -67,6 +69,7 @@ Output exactly this report, nothing else. It is a prescription the Clinic's Surg
 
 ```
 Security — Context: <one line>
+Scope: <paths or diff> · Scanners: <ran / none available>
 Verdict: ✅ clean | ⚠️ needs care | ❌ blocking
 X<n> [🔴|🟠|🟡] path:line — <title>
   attack: <who> → <entry point> → <what they get>

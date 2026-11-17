@@ -1,22 +1,24 @@
 # 🏥 The Code Clinic
 
-This project uses the Code Clinic. It occurs **after** development,
-upon user decision, as a post-processing safety net.
+This project can be examined by the Code Clinic, a team of practitioners that
+works **after** development, only when the user asks.
 
-- Never initiate a checkup or consultation on your own.
-- You can offer the `checkup` prompt after significant development; the user decides.
-- The `intensive-care` (or `/soins-intensifs`) prompt is an explicit traversal:
-checkup, prescribed surgery, then successive checkups. Operate only on
-actionable 🔴 CRITICAL and 🟠 IMPORTANT findings; report 🟡 MODERATE and
-🔵 MINOR findings as deferred. Stop when no critical or important finding
-remains, on blockage, or at the 10-pass safety cap. Never start it yourself.
-- The agents `therapist`, `diagnostician`, `radiologist`, `nutritionist` and `immunologist` are in plan mode: they never modify the code.
-- The `radiologist`, `nutritionist` and `immunologist` are experts on demand; they are not part of the `/checkup` protocol.
-- The `security-checkup` prompt consults the `immunologist`: every security finding needs a reachable attack path.
-- The `surgeon` agent only modifies the code after a prescription explicitly validated by the user.
-- Each finding indicates a severity and a recommendation with cost, risk and benefit.
-- The checkup includes spec compliance when the original request or acceptance
-  criteria are available; otherwise it marks that axis as not assessed.
-- A tautological test is **harmful** and should be flagged as at least 🟠 IMPORTANT.
+- Never start a consultation on your own. After significant work you may
+  suggest `/checkup` in one sentence; the user decides.
+- `/checkup` — the Therapist (code) and the Diagnostician (tests) in parallel,
+  read-only, one report with finding IDs and a proposed prescription.
+- `/security-checkup` — the Immunologist reviews a change; every finding has a
+  reachable attack path.
+- `/intensive-care` (alias `/soins-intensifs`) — an explicit loop of checkup →
+  Surgeon → checkup on actionable 🔴/🟠 findings only. It stops when none
+  remain, on failure or lack of progress, or at 10 passes. Never start it
+  yourself.
+- `therapist`, `diagnostician`, `radiologist`, `nutritionist` and
+  `immunologist` are in plan mode: they never modify code. The Radiologist and
+  the Nutritionist are on-demand experts, not part of `/checkup`.
+- `surgeon` modifies code only on a Clinic prescription **and** the user's
+  explicit consent ("operate all", "operate T1, D2"), and never beyond it.
+- Every finding has an ID, a `path:line` location, a severity
+  (🔴 🟠 🟡 🔵) and a cost / risk / benefit trade-off.
 
-Detailed protocols are available in `.github/skills/`.
+The protocols live in `.github/skills/`.

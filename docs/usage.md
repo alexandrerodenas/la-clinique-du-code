@@ -1,99 +1,113 @@
 # 🧭 Usage
 
-## The `/checkup` command
+The same commands exist in every adapter (Claude Code, OpenCode, GitHub
+Copilot). Each one takes an optional scope:
 
-This command is provided by the OpenCode, GitHub Copilot and Claude Code
-adapters. In the GitHub Copilot application, the native extension registers
-`/checkup` and also exposes the `clinic_checkup` compatibility tool. It
-orchestrates `therapist` and `diagnostician` in the current session; no model
-is fixed, so the subagents inherit the model from the parent session. In VS
-Code, it is provided by the prompt file `.github/prompts/checkup.prompt.md`.
-The checkup protocol remains reusable by other integrations.
+| Scope | Examined |
+|---|---|
+| *(empty)* | the work of the current session, else the uncommitted changes |
+| `src/billing` (one or more paths) | those files, as they are |
+| `branch:feature/x` | the branch's diff against the default branch (`origin/HEAD`, else `main`, else `master`) — the branch must exist locally |
 
-In OpenCode and Claude Code it is installed as a command
-(`~/.claude/commands/checkup.md` for Claude Code, dispatching `therapist` and
-`diagnostician` as subagents via the `Task` tool). In VS Code it appears
-in the Copilot chat using the prompt file `.github/prompts/checkup.prompt.md`.
-
-One command, two practitioners, one report.
+## `/checkup` — the general practitioner
 
 ```bash
-/checkup                                # consult the current session's work
-/checkup <path>                         # consult a specific scope
-/checkup branch:<branch>                # consult a branch diff (against the base)
+/checkup
+/checkup src/billing
+/checkup branch:feature/invoices
 ```
 
-`/checkup` opens the patient file, then:
+1. The Clinic opens the patient file: files in scope, their tests, the project
+   context, and the functional contract (your original request or acceptance
+   criteria) when there is one.
+2. The **Code Therapist** and the **Test Diagnostician** examine it in
+   parallel, read-only. The Diagnostician may run the relevant tests to
+   measure them; it never updates snapshots or writes files.
+3. You get one report: verdict (✅ healthy · ⚠️ care needed · ❌
+   hospitalization), spec compliance (or *not assessed*), a findings table
+   with IDs, and a proposed prescription.
 
-1. **The Code Therapist** examines code quality and compares the implementation
-   with the original request or acceptance criteria when available; otherwise
-   spec compliance is reported as not assessed;
-2. **The Test Diagnostician** runs the tests in the laboratory, measures their
-   duration, and reports any test exceeding 5 seconds, as well as timeouts and
-   hangs;
-3. The Clinic produces a **checkup report**: findings by severity, verdict
-overall (✅ healthy / ⚠️ necessary care / ❌ hospitalization) and prioritized prescription.
+```text
+| ID | Severity | Where              | Finding                               | Trade-off     |
+|----|----------|--------------------|---------------------------------------|---------------|
+| T1 | 🔴       | src/invoice.ts:42  | Rounding applied before tax           | S · low · …   |
+| D1 | 🟠       | tests/invoice.test.ts:10 | Expected value rebuilt with the same formula (tautology) | S · low · … |
+```
 
-> ⚠️ Golden rule of the clinic: **no operations during a checkup**. The
-> practitioners diagnose and prescribe. The operation (refactoring) is performed
-> only with the explicit consent of the patient — the user.
+> ⚠️ Golden rule: **no operation during a checkup.** Practitioners diagnose
+> and prescribe; you decide.
 
-## Intensive care mode
+## Operating: the Surgeon
 
-The OpenCode, Copilot and Claude Code adapters also offer `/intensive-care`,
-with `/soins-intensifs` as French alias. This is the only mode that connects
-automatically diagnose and operate, and it remains fully opt-in:
-explicitly launching the command constitutes consent for successive prescriptions
-within the provided scope.
+Approve all or part of a prescription, by ID:
+
+```text
+operate all
+operate T1 and D1
+have the surgeon treat X2 from the security checkup
+```
+
+The Surgeon takes a baseline (uncommitted changes, current test results),
+operates batch by batch, verifies each batch against the baseline, reverts a
+batch it cannot make pass, and returns a post-operative report listing every
+change. It refuses to operate without a Clinic prescription and your explicit
+consent, and never treats more than what you approved.
+
+## `/security-checkup` — the Immunologist
 
 ```bash
-/intensive-care                         # current session
-/intensive-care <path>                  # specific scope
-/intensive-care branch:<branch>         # branch diff against the base
-/soins-intensifs <path>               # French alias
+/security-checkup branch:feature/upload
 ```
 
-The protocol launches a checkup and transmits only actionable 🔴 CRITICAL and
-🟠 IMPORTANT findings to the Surgeon. It checks the result, then reruns a
-checkup with the same scope. It stops as soon as no such finding remains;
-🟡 MODERATE and 🔵 MINOR findings are reported as deferred and never trigger an
-operation. Refusal, failure or lack of progress also stops the loop. The
-10-pass limit is a safety cap, not a target. Each pass and its reason for
-stopping appear in the final balance sheet. A speculative or non-actionable
-recommendation does not trigger an operation.
+Maps the entry points the change touches, runs cheap scanners if installed
+(gitleaks, semgrep, dependency audits — nothing is installed for you), and
+reports only threats an attacker can reach. Every finding has an
+`attack: who → entry point → what they get` line; nothing reachable means
+`✅ clean`, and that is a good outcome.
 
-## On-demand consultations
-
-Each practitioner can be consulted individually when you need it:
+## `/intensive-care` — the loop (alias `/soins-intensifs`)
 
 ```bash
-analyze this repository's zone of pain    # radiological scan (churn + coupling)
-consult the Nutritionist about src/    # verify that this code is necessary
-/security-checkup branch:<branch>      # the Immunologist reviews a change for security threats
-ask the Therapist to review my code    # focused quality review
+/intensive-care src/billing
+/soins-intensifs branch:feature/invoices
 ```
 
-Clinic agents can only be invoked by the user. They are not automatically
-selected by the model; `/checkup` launches the checkup coordinator in the
-current session.
+The only mode that chains diagnosis and surgery without asking in between,
+so it is strictly opt-in: running the command is consent to operate on the
+🔴 CRITICAL and 🟠 IMPORTANT findings of each pass, within the scope — nothing
+else.
 
-After significant development, your assistant may **invite** you to initiate a
-checkup:
+Each pass: checkup → keep the actionable 🔴/🟠 findings → Surgeon → review.
+It stops as soon as none remain, when the Surgeon refuses or fails, when a
+check regresses, when the same finding comes back (no progress), or at
+pass 10. 🟡/🔵 findings are reported as deferred and never operated. The final
+report lists every pass, what was treated, and why it stopped.
 
-> “The development is complete. Would you like me to run a Code Clinic checkup
-> before acceptance testing?”
+## On-demand experts
 
-It's up to you. It's the contract.
-
-## The transition to the block
-
-When a report (checkup, consultation, radiology) contains treatment to be operated on,
-entrust the prescription to the **Surgeon**:
-
-```bash
-have the Surgeon execute the checkup prescription
+```text
+ask the radiologist for this repository's zone of pain
+x-ray src/ since 6 months ago
+have the nutritionist check whether src/plugins is still needed
+ask the therapist to review src/parser.ts against the acceptance criteria in ISSUE.md
 ```
 
-The Surgeon divides the prescription into batches, dispatches a sub-agent per batch,
-checks the diffs and tests, then provides a post-operative report. Never an operation
-without a validated prescription — and never an operation beyond the prescription.
+- The **Radiologist** runs a read-only analyzer on the git history:
+  pain zones (files that change often *and* that many files import), the most
+  unstable files, and temporal coupling — files that change together without
+  importing each other. It ends with the 1–3 files the Therapist should
+  examine first. You can run the analyzer yourself:
+  `node core/tools/zone-of-pain-analyzer.js --since "12 months ago"`
+  (`--path`, `--top`, `--temporal`, `--json`, `--help`).
+- The **Nutritionist** establishes the real uses of the code before judging
+  it, then reports dead code, speculation, over-engineering and reinvented
+  wheels, each with a confidence level.
+
+## The contract
+
+The Clinic never starts on its own. After significant work your assistant may
+ask, in one sentence:
+
+> "The feature is done. Would you like a Code Clinic checkup before you commit?"
+
+It's up to you.

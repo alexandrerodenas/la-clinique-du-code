@@ -1,177 +1,121 @@
 # 📋 Installation — Make an appointment
 
-## Architecture
+The Clinic is one portable core (`core/`) and one integration per coding
+assistant. Pick yours below. Every installer is a single cross-platform
+command (Windows, macOS, Linux) that needs only **Node.js ≥ 18** — the same
+Node the Radiologist's analyzer uses.
 
-The portable core is located in `core/`. It contains the practitioners'
-protocols and the zone-of-pain analyzer. Adapter-specific files are grouped in
-`adapters/`.
+| Assistant | Recommended install | Where it goes |
+|---|---|---|
+| Claude Code | the plugin | managed by Claude Code |
+| OpenCode | `node scripts/install.mjs opencode` | `~/.config/opencode/` (global) |
+| GitHub Copilot — VS Code, Copilot app | `node scripts/install.mjs copilot --project <dir>` | `<dir>/.github/` (per project) |
+| GitHub Copilot CLI | `copilot plugin install ./plugin` | skills only |
 
-This page documents the installation of both adapters. Another assistant
-can reuse `core/` by providing its own integration.
-
-## Prerequisites
-
-- [OpenCode](https://opencode.ai), [GitHub Copilot in VS Code](https://code.visualstudio.com/docs/copilot/overview), or [Claude Code](https://claude.com/claude-code), depending on the chosen adapter
-
-## Step 1 — Clone the clinic
-
-```bash
-git clone https://github.com/alexandrerodenas/la-clinique-du-code.git
-```
-
-## Step 2 — Install the OpenCode adapter
-
-**Windows (PowerShell):**
-
-```powershell
-.\install.ps1
-```
-
-The installation copies the `core/` protocols in OpenCode skill format, along
-with the agents and the `/checkup` and `/intensive-care` commands (aka
-`/soins-intensifs`) and the associated scan tool in the global configuration
-of OpenCode — they will be
-available in all your projects.
-
-## Step 3 — Install the clinic prompt system
-
-Add the contents of [`adapters/opencode/templates/AGENTS.md.clinic`](../adapters/opencode/templates/AGENTS.md.clinic)
-in your `AGENTS.md` (global or per project). This is what gives your assistant the
-concept of a checkup: being able to **suggest** a consultation after development —
-never impose it.
-
-## Step 4 — Restart OpenCode
-
-The configuration is loaded at startup. Exit and restart OpenCode.
-
-## GitHub Copilot CLI
-
-From the repository root, install the Agent Plugins 1.0 package to make the
-portable Clinic skills available in Copilot CLI:
-
-```powershell
-copilot plugin install .\plugin
-copilot plugin list
-```
-
-In an interactive Copilot CLI session, run `/skills list` to verify that the
-skills are available. For the Copilot application and VS Code integration,
-including its agents, prompts and native extension, use the adapter below.
-
-## GitHub Copilot application and GitHub Copilot in VS Code
-
-From the root of the Clinic, install the adapter in the target project:
-
-```powershell
-.\adapters\copilot\install.ps1 -ProjectRoot C:\path\to\project
-```
-
-The adapter installs the protocols in `.github/skills/`, the native extension
-in `.github/extensions/la-clinique-du-code/extension.mjs`, the agents in
-`.github/agents/`, the prompts `/checkup` and `/intensive-care` (with the alias
-`/soins-intensifs`) in `.github/prompts/` and the global instructions in
-`.github/copilot-instructions.md`.
-
-In the GitHub Copilot application, the extension registers native commands
-`/checkup`, `/intensive-care` and `/soins-intensifs`, as well as the tools for
-`clinic_checkup` and `clinic_intensive_care` compatibility. The checkup
-coordinator launches only the `therapist` and `diagnostician` subagents in the
-current session; the `radiologist`, `nutritionist` and `immunologist` remain available for
-consultation on request. The `surgeon` is declared as an explicit subagent,
-without a forced model
-and without automatic inference: it can only intervene on prescription and
-explicit consent. The Diagnostician can run unit tests without
-modifying the repository and reports tests exceeding 5 seconds, timeouts and
-hangs. In VS Code, the prompt
-`.github/prompts/checkup.prompt.md` provides the `/checkup` command and
-`.github/prompts/intensive-care.prompt.md` provides intensive care mode. The
-diagnostic agents remain read-only.
+Every `scripts/install.mjs` target accepts `--dry-run` (show what would
+change) and `--uninstall` (remove the Clinic's files and nothing else).
+Re-running an install updates the files in place.
 
 ## Claude Code
 
-From the root of the Clinic, install the adapter into your global Claude Code
-configuration:
+### Plugin (recommended)
 
-```powershell
-.\adapters\claude\install.ps1
+```bash
+claude plugin marketplace add alexandrerodenas/la-clinique-du-code
+claude plugin install la-clinique-du-code@la-clinique-du-code
 ```
 
-The installation copies the `core/` protocols in Claude Code skill format to
-`~/.claude/skills/`, along with the subagents (`~/.claude/agents/`) and the
-`/checkup` and `/intensive-care` commands (aka `/soins-intensifs`, in
-`~/.claude/commands/`) — they will be available in all your projects. Each
-diagnostic subagent (`therapist`, `diagnostician`, `radiologist`,
-`nutritionist`, `immunologist`) is restricted to read-only tools; only `surgeon` can use
-`Edit`, `Write`, `Bash` and `Task`, and only on a validated prescription. The
-manual adapter reuses the agents and commands from `plugin/`; no `CLAUDE.md`
-block is required. Restart Claude Code after installation.
+Restart Claude Code. Update later with `claude plugin update la-clinique-du-code`.
+The plugin provides the 8 skills, the 6 practitioner subagents and the
+`/checkup`, `/security-checkup`, `/intensive-care` and `/soins-intensifs`
+commands. See [`plugin/README.md`](../plugin/README.md).
+
+### Manual install
+
+If you prefer plain files in `~/.claude/`:
+
+```bash
+git clone https://github.com/alexandrerodenas/la-clinique-du-code.git
+cd la-clinique-du-code
+node scripts/install.mjs claude          # or: --dest <dir> for another config folder
+```
+
+Do not combine the manual install with the plugin: you would get every
+practitioner twice.
+
+## OpenCode
+
+```bash
+git clone https://github.com/alexandrerodenas/la-clinique-du-code.git
+cd la-clinique-du-code
+node scripts/install.mjs opencode        # honours $XDG_CONFIG_HOME; or --dest <dir>
+```
+
+This installs the skills (`skills/`), the practitioners (`agent/`) and the
+commands (`commands/`). Then, optionally, add the content of
+[`adapters/opencode/templates/AGENTS.md.clinic`](../adapters/opencode/templates/AGENTS.md.clinic)
+to your `AGENTS.md` (global or per project) so the assistant knows it may
+**suggest** a checkup — never impose one. Restart OpenCode.
+
+## GitHub Copilot (VS Code and the Copilot application)
+
+```bash
+node scripts/install.mjs copilot --project /path/to/your/project
+```
+
+This writes, in the target project:
+
+- `.github/skills/` — the 8 protocols;
+- `.github/agents/` — the 6 practitioners plus the `checkup`,
+  `intensive-care` and `security-checkup` coordinators;
+- `.github/prompts/` — `/checkup`, `/security-checkup`, `/intensive-care`,
+  `/soins-intensifs`;
+- `.github/extensions/la-clinique-du-code/extension.mjs` — native commands
+  and tools for the Copilot application;
+- a Clinic block in `.github/copilot-instructions.md`, between
+  `<!-- la-clinique-du-code:start -->` and `:end -->` markers. Your own
+  instructions in that file are kept; `--uninstall` removes only the block.
+
+Commit `.github/` to share the Clinic with your team.
+
+## GitHub Copilot CLI
+
+```bash
+copilot plugin install ./plugin
+copilot plugin list
+```
+
+In a session, `/skills list` shows the Clinic's skills. For agents and
+commands, use the adapter above.
+
+## Windows PowerShell wrappers
+
+`install.ps1` (OpenCode) and `adapters/<name>/install.ps1` still exist for
+compatibility; they call `scripts/install.mjs` with the same arguments.
 
 ---
 
-## 🤖 Installation by a code agent (from scratch)
+## 🤖 Installation by a coding agent
 
-Don't want to do it by hand? Copy and paste the following prompt into your
-coding assistant. It will set up the clinic step by step:
+Paste this into your coding assistant:
 
 ```text
-You are going to install “La Clinique du Code” (a portable kit with adapters
-OpenCode and GitHub Copilot: practitioners [skills] + agents [plan mode +
-surgeon] + the /checkup and /intensive-care commands + a system
-prompt) from the repository
-https://github.com/alexandrerodenas/la-clinique-du-code.git
+Install "La Clinique du Code" for me.
 
-Follow these steps exactly, in order:
-
-1. Clone the repository into a temporary folder:
-git clone https://github.com/alexandrerodenas/la-clinique-du-code.git <tmp>
-
-2. Determine the global OpenCode configuration folder:
-   - Windows: %USERPROFILE%\.config\opencode\
-   - Linux / macOS: ~/.config/opencode/
-(let's call it <config>)
-
-3. Install all protocols as skills:
-   - for each file <tmp>\core\protocols\<name>.md, create
-     <config>\skills\<name>\SKILL.md (code-therapist, test-diagnostician,
-zone-of-pain, nutritionist, immunologist, and anyone else who appears in the future)
-   - copy <tmp>\core\tools\zone-of-pain-analyzer.js to
-     <config>\skills\zone-of-pain\zone-of-pain-analyzer.js
-
-4. Install the agents:
-   - create the <config>\agent (or agents) folder
-   - copy each file <tmp>\adapters\opencode\agents\<name>.md to <config>\agent\<name>.md
-     (therapist, diagnostician, radiologist, nutritionist, immunologist, surgeon,
-and all those who appear in the future)
-
-5. Install the commands:
-   - copy <tmp>\adapters\opencode\commands\checkup.md to <config>\commands\checkup.md
-   - copy <tmp>\adapters\opencode\commands\intensive-care.md to
-     <config>\commands\intensive-care.md
-   - copy <tmp>\adapters\opencode\commands\soins-intensifs.md to
-     <config>\commands\soins-intensifs.md
-   - copy <tmp>\adapters\opencode\commands\security-checkup.md to
-     <config>\commands\security-checkup.md
-
-6. Install the clinic prompt system:
-   - read the file <tmp>\adapters\opencode\templates\AGENTS.md.clinic
-   - append its content to the end of <config>\AGENTS.md
-     (removing the first header line “# This block is to be added in the
-     AGENTS.md file of your project.”)
-   - if <config>\AGENTS.md does not exist, create it with this content
-
-7. Clean the temporary folder <tmp>.
-
-8. Verify that all practitioners, agents, and commands are in place, and
-that the clinical block is present in AGENTS.md. Announce the result.
-
-9. Warn the user that they must exit and restart OpenCode for the
-   Clinic to take effect.
-
-If you detect former practitioners installed elsewhere (for example
-~/.agents/skills/code-therapy, ~/.agents/skills/test-diagnostics or
-~/.agents/skills/zone-of-pain), ask the user whether they want to delete them
-before finishing.
+1. Clone https://github.com/alexandrerodenas/la-clinique-du-code.git into a
+   temporary folder <tmp>.
+2. Check that `node --version` is 18 or later. If Node is missing, stop and
+   tell me.
+3. Ask me which assistant I use if you cannot tell, then run from <tmp>:
+   - Claude Code:   prefer the plugin — tell me to run
+                    `claude plugin marketplace add alexandrerodenas/la-clinique-du-code`
+                    then `claude plugin install la-clinique-du-code@la-clinique-du-code`;
+                    if I want plain files instead: `node scripts/install.mjs claude`
+   - OpenCode:      `node scripts/install.mjs opencode`
+   - Copilot:       `node scripts/install.mjs copilot --project <my project>`
+4. Show me the installer's output. For OpenCode, offer to add
+   adapters/opencode/templates/AGENTS.md.clinic (without its first comment
+   line) to my global AGENTS.md, and do it only if I agree.
+5. Delete <tmp>.
+6. Remind me to restart my assistant.
 ```
-
-This prompt works with any coding assistant that has a shell
-(Windows, Linux or macOS): it does not require a script or specific tool.

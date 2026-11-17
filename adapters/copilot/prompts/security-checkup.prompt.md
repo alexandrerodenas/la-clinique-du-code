@@ -1,13 +1,7 @@
 ---
-description: Launches a manual security checkup of the Code Clinic on the requested perimeter.
-agent: immunologist
+description: "Code Clinic security checkup: the Immunologist reviews a change for reachable threats, each with an attack path."
+agent: security-checkup
 ---
 
-# 🦠 Code Clinic Security Checkup
-
-Read `.github/skills/immunologist/SKILL.md` and apply its protocol to
-`${input:scope:path, branch, or scope to examine}`. For a branch, analyze the
-diffs compared to the base branch.
-
-Never modify the code. If the user wants the findings treated, suggest
-entrusting the report to the `surgeon` agent as a prescription.
+Run a Code Clinic security checkup on `${input:scope:path, branch:<name>, or empty for the uncommitted changes}`.
+Apply `.github/skills/immunologist/SKILL.md`; never modify the code.

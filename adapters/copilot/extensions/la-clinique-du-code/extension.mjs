@@ -1,271 +1,139 @@
 import { joinSession } from "@github/copilot-sdk/extension";
 
-const checkupInstructions = (scope) => `Tu coordonnes un checkup de La Clinique du Code en mode diagnostic, sans modifier le code.
+// La Clinique du Code — extension for the GitHub Copilot application.
+// The protocols live in .github/skills/ (installed by adapters/copilot); this
+// extension only registers commands, tools and subagents that point to them.
 
-Perimetre a examiner : ${scope || "le travail de la session courante"}.
+const describeScope = (scope) => scope || "le travail de la session courante (sinon les modifications non commitees)";
 
-Utilise la demande initiale, la specification ou les criteres d'acceptation
-explicites comme contrat fonctionnel lorsqu'ils sont disponibles, et transmets
-ces elements au therapist. Si aucun contrat exploitable n'est accessible,
-indique que la conformite a la spec n'a pas ete evaluee ; n'invente pas
-d'exigences.
+const PROTOCOLS = {
+    checkup: (scope) => `Tu coordonnes un checkup de La Clinique du Code.
 
-Lis les protocoles necessaires dans .github/skills/ puis delegue en parallele :
-1. le Therapeute du Code (agent therapist) pour la qualite, l'architecture et
-   la conformite a la spec lorsqu'elle peut etre evaluee ;
-2. le Diagnosticien des Tests (agent diagnostician) pour les tests.
-Les deux agents sont strictement en lecture seule. Le radiologist, le
-nutritionist et l'immunologist sont des experts a la demande et ne font pas partie du protocole
-de checkup.
+Lis .github/skills/checkup/SKILL.md et applique-le integralement au perimetre : ${describeScope(scope)}.
 
-Rends un rapport avec le contexte, la conformite a la spec (ou "non evaluee"),
-les constats tries par severite, les fichiers et lignes concernes, le verdict
-global et une ordonnance priorisee avec cout, risque et benefice. Un test
-tautologique est harmful et doit etre signale au minimum comme IMPORTANT.
+Delegue en parallele au subagent therapist et au subagent diagnostician, avec des briefs complets (listes de fichiers, contexte du projet, contrat fonctionnel ou "aucun contrat disponible") : ils ne peuvent pas poser de questions. Ne modifie jamais le code, les tests ou la configuration pendant un checkup et ne fais pas appel au surgeon. Termine par l'ordonnance proposee : l'utilisateur approuve tout ou une selection par identifiant (T1, D2...). Reponds en francais.`,
 
-Ne modifie jamais le code, les tests ou la configuration pendant ce checkup.
-Ne demande pas au surgeon d'intervenir pendant le checkup.`;
+    intensiveCare: (scope) => `Tu coordonnes les soins intensifs de La Clinique du Code.
 
-const intensiveCareInstructions = (scope) => `Tu coordonnes les soins intensifs de La Clinique du Code.
+Lis .github/skills/intensive-care/SKILL.md et .github/skills/checkup/SKILL.md, puis applique strictement le protocole de soins intensifs au perimetre : ${describeScope(scope)}. Garde ce perimetre identique a chaque passe.
 
-Lis .github/skills/intensive-care/SKILL.md et conserve ce perimetre pendant toute
-la boucle : ${scope || "le travail de la session courante"}.
+Le lancement explicite de ce mode vaut consentement pour operer les constats 🔴/🟠 de chaque passe dans ce perimetre, et rien d'autre. Checkup (therapist + diagnostician en parallele), puis surgeon sur les seuls constats 🔴/🟠 actionnables, jamais en parallele. Arrete-toi des qu'il n'en reste plus, en cas de refus, d'echec, de regression ou d'absence de progres, ou a 10 passes. N'annonce jamais un succes non verifie. Reponds en francais.`,
 
-Le lancement explicite de ce mode vaut consentement pour operer les prescriptions
-successives dans ce perimetre. Ce consentement n'autorise jamais une
-modification hors prescription.
+    securityCheckup: (scope) => `Tu coordonnes un checkup de securite de La Clinique du Code.
 
-Pour chaque passe, dans cet ordre strict :
-1. Lance un checkup complet en lecture seule, comme /checkup, avec therapist et
-   diagnostician en parallele.
-2. Attends le rapport complet et isole uniquement les constats actionnables
-   🔴 CRITICAL ou 🟠 IMPORTANT qui demandent une modification verifiable.
-3. S'il ne reste aucun constat 🔴/🟠, arrete les operations et rends le bilan
-   final. Signale les constats 🟡/🔵 restants comme differes ; ils ne declenchent
-   ni chirurgie ni nouvelle passe.
-4. Sinon, delegue exactement ces constats 🔴/🟠 au surgeon. Il ne traite rien
-   d'autre ; les constats 🟡/🔵 restent hors prescription.
-5. Attends son compte rendu, relis le diff et les validations.
-6. Si le surgeon refuse, echoue, ne produit aucune modification ou signale une
-   prescription non traitable, arrete avec un blocage explicite. N'affiche pas
-   de succes artificiel.
-7. Sinon, relance un checkup avec le meme perimetre.
+Resous le perimetre comme le decrit .github/skills/checkup/SKILL.md : ${describeScope(scope)}. Delegue ensuite au subagent immunologist avec la liste des fichiers modifies et la commande de diff ; il ne peut pas poser de questions. Rends son rapport tel quel. Ne modifie jamais le code. Si l'utilisateur veut traiter les constats, le rapport sert d'ordonnance au surgeon.`,
+};
 
-Ne saute jamais le premier checkup et ne lance jamais le surgeon en parallele du
-diagnostic. Ne transforme pas une recommandation speculative en operation.
-Les 10 passes constituent un plafond de securite, pas un objectif : arrete plus
-tot des qu'il ne reste aucun constat actionnable 🔴/🟠. Si ce plafond est atteint,
-liste les constats 🔴/🟠 non resolus. Rends un bilan chronologique avec les
-prescriptions, operations, validations, constats restants et raison d'arret.`;
+const readOnly = ["grep", "glob", "view"];
+const readAndRun = [...readOnly, "bash"];
+
+const practitioner = (name, displayName, description, skill, tools, extra = "") => ({
+    name,
+    displayName,
+    description,
+    tools,
+    infer: false,
+    skills: [skill],
+    prompt: `Tu es ${displayName}, praticien de La Clinique du Code. Lis le skill ${skill} (.github/skills/${skill}/SKILL.md) et applique-le integralement au perimetre fourni. Tu ne peux pas poser de questions a l'utilisateur : deduis le contexte du depot et indique tes hypotheses. Chaque constat a un identifiant, un emplacement path:ligne, une severite et un compromis cout/risque/benefice. ${extra}`.trim(),
+});
 
 const customAgents = [
-    {
-        name: "therapist",
-        displayName: "Therapeute du Code",
-        description:
-            "Analyse la qualite, l'architecture et la refactorabilite du code en lecture seule.",
-        tools: ["grep", "glob", "view"],
-        infer: false,
-        skills: ["code-therapist"],
-        prompt:
-            "Tu es le Therapeute du Code, en mode plan et lecture seule. Lis le skill code-therapist, analyse le perimetre fourni et verifie la conformite a la demande initiale ou aux criteres d'acceptation explicites lorsqu'ils sont disponibles. Cite les exigences et les preuves ; si aucune spec n'est accessible, indique que la conformite n'a pas ete evaluee sans inventer d'exigences. Rends un diagnostic avec causes racines, severites et recommandations. Ne modifie jamais aucun fichier.",
-    },
-    {
-        name: "diagnostician",
-        displayName: "Diagnosticien des Tests",
-        description:
-            "Evalue et execute les tests unitaires en lecture seule, en detectant les tests lents.",
-        tools: ["grep", "glob", "view", "bash"],
-        infer: false,
-        skills: ["test-diagnostician"],
-        prompt:
-            "Tu es le Diagnosticien des Tests, en mode plan et lecture seule. Lis le skill test-diagnostician et applique toute sa checklist. Ton avis critique sur la qualite des tests reste prioritaire : pertinence des scenarios, robustesse, isolation, assertions, maintenabilite et detection des tautologies. La duree est un axe complementaire, pas un substitut a cette revue. Identifie le framework puis lance les tests unitaires pertinents avec l'outil d'execution, sans modifier les fichiers. Mesure la duree de chaque test lorsque possible. Signale tout test depassant 5 secondes comme anomalie de performance, ainsi que les suites lentes, les timeouts et les blocages. Signale tout test tautologique comme harmful, avec une severite minimale IMPORTANT. Ne modifie jamais aucun fichier.",
-    },
-    {
-        name: "radiologist",
-        displayName: "Radiologue de l'Architecture",
-        description:
-            "Analyse l'historique Git et les dependances pour reperer les zones de douleur.",
-        tools: ["grep", "glob", "view", "bash"],
-        infer: false,
-        skills: ["zone-of-pain"],
-        prompt:
-            "Tu es le Radiologue de l'Architecture, en mode plan et lecture seule. Lis le skill zone-of-pain, execute son analyseur depuis la racine du projet, puis rends un compte rendu avec le churn, le couplage et les zones de douleur. Ne modifie jamais le code.",
-    },
-    {
-        name: "nutritionist",
-        displayName: "Nutritionniste du Projet",
-        description:
-            "Verifie que le code analyse est necessaire et correctement dimensionne.",
-        tools: ["grep", "glob", "view"],
-        infer: false,
-        skills: ["nutritionist"],
-        prompt:
-            "Tu es le Nutritionniste du Projet, en mode plan et lecture seule. Lis le skill nutritionist, questionne les usages reels et identifie le code mort, la speculation ou la sur-ingenierie. Ne modifie jamais le code.",
-    },
-    {
-        name: "immunologist",
-        displayName: "Immunologiste",
-        description:
-            "Revue de securite d'un changement : menaces atteignables uniquement, chacune avec un chemin d'attaque.",
-        tools: ["grep", "glob", "view", "bash"],
-        infer: false,
-        skills: ["immunologist"],
-        prompt:
-            "Tu es l'Immunologiste, en mode plan et lecture seule. Lis le skill immunologist et applique tout son protocole : contexte en une ligne, scanners deterministes s'ils sont installes, surface d'attaque touchee par le diff, huit lentilles. Chaque constat a un emplacement path:ligne et une ligne attack. N'utilise bash que pour des scanners en lecture seule et des commandes git de lecture. N'installe rien et ne modifie jamais le code.",
-    },
-    {
-        name: "surgeon",
-        displayName: "Chirurgien",
-        description:
-            "Execute uniquement une prescription validee avec le consentement explicite de l'utilisateur.",
-        tools: ["grep", "glob", "view", "edit", "bash"],
-        infer: false,
-        skills: ["surgeon"],
-        prompt:
-            "Tu es le Chirurgien. Tu es desactive pour l'inference automatique (infer=false). N'interviens que si le message contient une prescription issue d'un diagnostic et un consentement explicite de l'utilisateur. Le mode intensive-care, lance explicitement par l'utilisateur, fournit ce consentement pour la prescription courante et les prescriptions successives dans le meme perimetre. Si la prescription ou le consentement manque, refuse d'operer. N'effectue que les changements prescrits, puis verifie le diff et les validations. Ne depasse jamais la prescription.",
-    },
+    practitioner("therapist", "Therapeute du Code", "Qualite, architecture, refactorabilite et conformite a la demande, en lecture seule.", "code-therapist", readOnly,
+        "Si aucun contrat fonctionnel n'est fourni, indique que la conformite n'a pas ete evaluee. Ne modifie jamais aucun fichier."),
+    practitioner("diagnostician", "Diagnosticien des Tests", "Pertinence et robustesse des tests, tests tautologiques et tests lents, en lecture seule.", "test-diagnostician", readAndRun,
+        "Le shell sert uniquement a lancer les tests existants : n'installe rien, ne mets jamais a jour de snapshot, ne modifie aucun fichier. Un test tautologique est harmful, au minimum IMPORTANT."),
+    practitioner("radiologist", "Radiologue de l'Architecture", "Zones de douleur de l'historique git : churn, couplage, couplage temporel.", "zone-of-pain", readAndRun,
+        "Le shell sert uniquement a l'analyseur en lecture seule et aux commandes git de lecture. Ne modifie jamais le code."),
+    practitioner("nutritionist", "Nutritionniste du Projet", "Code mort, speculation et sur-ingenierie au regard des usages reels.", "nutritionist", readOnly,
+        "Etablis les usages reels avant tout jugement. Ne modifie jamais le code."),
+    practitioner("immunologist", "Immunologiste", "Menaces de securite atteignables d'un changement, chacune avec un chemin d'attaque.", "immunologist", readAndRun,
+        "Le shell sert uniquement aux scanners en lecture seule et aux commandes git de lecture. N'installe rien, n'envoie aucune requete a un systeme en marche, ne modifie jamais le code."),
+    practitioner("surgeon", "Chirurgien", "Execute uniquement une ordonnance validee, avec le consentement explicite de l'utilisateur.", "surgeon", [...readAndRun, "edit"],
+        "Tu es le seul praticien autorise a modifier le code. N'opere que si le message contient une ordonnance de la Clinique ET le consentement explicite de l'utilisateur (ou le lancement explicite des soins intensifs). Sinon refuse. Prends une baseline des tests avant d'operer, ne traite que les constats approuves, verifie chaque lot et rends le compte rendu operatoire."),
 ];
 
-const runCheckup = async (scope) => {
-    await session.log(
-        `Checkup lance sur ${scope || "le travail de la session courante"}. Les praticiens restent en lecture seule.`
-    );
-    return session.send({
-        prompt: checkupInstructions(scope),
-        source: "system",
-        mode: "immediate",
-    });
+const send = async (label, prompt, scope) => {
+    await session.log(`${label} lance sur ${describeScope(scope)}.`);
+    return session.send({ prompt, source: "system", mode: "immediate" });
 };
 
-const runIntensiveCare = async (scope) => {
-    await session.log(
-        `Soins intensifs lances sur ${scope || "le travail de la session courante"}. La boucle checkup/chirurgie est active.`
-    );
-    return session.send({
-        prompt: intensiveCareInstructions(scope),
-        source: "system",
-        mode: "immediate",
-    });
+const run = {
+    checkup: (scope) => send("Checkup", PROTOCOLS.checkup(scope), scope),
+    "intensive-care": (scope) => send("Soins intensifs", PROTOCOLS.intensiveCare(scope), scope),
+    "soins-intensifs": (scope) => send("Soins intensifs", PROTOCOLS.intensiveCare(scope), scope),
+    "security-checkup": (scope) => send("Checkup de securite", PROTOCOLS.securityCheckup(scope), scope),
 };
+
+const scopeParameter = {
+    type: "object",
+    properties: {
+        scope: {
+            type: "string",
+            description: "Chemin, branch:<nom> ou perimetre a examiner. Vide pour la session courante.",
+        },
+    },
+    additionalProperties: false,
+};
+
+const tool = (name, description, command) => ({
+    name,
+    description,
+    parameters: scopeParameter,
+    handler: async (args) => {
+        await run[command](args?.scope?.trim());
+        return { textResultForLlm: "Lance dans la session courante. Attends les rapports des sous-agents.", resultType: "success" };
+    },
+});
+
+const command = (name, description) => ({
+    name,
+    description,
+    handler: async ({ args }) => {
+        await run[name](args?.trim());
+    },
+});
 
 const session = await joinSession({
     customAgents,
     skillDirectories: [".github/skills"],
     commands: [
-        {
-            name: "checkup",
-            description:
-                "Lance un checkup diagnostique en orchestrant therapist et diagnostician, sans modifier le depot.",
-            handler: async ({ args }) => {
-                await runCheckup(args?.trim());
-            },
-        },
-        {
-            name: "intensive-care",
-            description:
-                "Lance les soins intensifs : opere uniquement les constats CRITICAL et IMPORTANT et s'arrete lorsqu'il n'en reste plus.",
-            handler: async ({ args }) => {
-                await runIntensiveCare(args?.trim());
-            },
-        },
-        {
-            name: "soins-intensifs",
-            description:
-                "Alias francais de la commande intensive-care.",
-            handler: async ({ args }) => {
-                await runIntensiveCare(args?.trim());
-            },
-        },
+        command("checkup", "Checkup diagnostique : therapist et diagnostician en parallele, sans modifier le depot."),
+        command("security-checkup", "Checkup de securite : l'immunologist examine un changement, sans modifier le depot."),
+        command("intensive-care", "Soins intensifs : opere uniquement les constats CRITICAL et IMPORTANT, s'arrete quand il n'en reste plus."),
+        command("soins-intensifs", "Alias francais de /intensive-care."),
     ],
     tools: [
-        {
-            name: "clinic_checkup",
-            description:
-                "Lance le checkup diagnostique de La Clinique du Code sans modifier le depot.",
-            parameters: {
-                type: "object",
-                properties: {
-                    scope: {
-                        type: "string",
-                        description:
-                            "Chemin, branche ou perimetre a examiner. Laisse vide pour la session courante.",
-                    },
-                },
-                additionalProperties: false,
-            },
-            handler: async (args) => {
-                await runCheckup(args?.scope);
-                return {
-                    textResultForLlm:
-                        "Le checkup a ete lance dans la session courante. Attends le rapport des sous-agents.",
-                    resultType: "success",
-                };
-            },
-        },
-        {
-            name: "clinic_intensive_care",
-            description:
-                "Lance les soins intensifs et opere uniquement les constats CRITICAL et IMPORTANT jusqu'a leur resolution ou un blocage.",
-            parameters: {
-                type: "object",
-                properties: {
-                    scope: {
-                        type: "string",
-                        description:
-                            "Chemin, branche ou perimetre a examiner. Laisse vide pour la session courante.",
-                    },
-                },
-                additionalProperties: false,
-            },
-            handler: async (args) => {
-                await runIntensiveCare(args?.scope);
-                return {
-                    textResultForLlm:
-                        "Les soins intensifs ont ete lances. Attends le bilan de chaque checkup et du surgeon.",
-                    resultType: "success",
-                };
-            },
-        },
+        tool("clinic_checkup", "Lance le checkup diagnostique de La Clinique du Code, sans modifier le depot.", "checkup"),
+        tool("clinic_security_checkup", "Lance le checkup de securite de La Clinique du Code, sans modifier le depot.", "security-checkup"),
+        tool("clinic_intensive_care", "Lance les soins intensifs : opere uniquement les constats CRITICAL et IMPORTANT jusqu'a resolution ou blocage.", "intensive-care"),
     ],
     hooks: {
+        // Compatibility bridge for CLI versions that do not expose native commands yet.
         onUserPromptSubmitted: async (input) => {
-            const match = input.prompt.match(
-                /^\/(checkup|intensive-care|soins-intensifs)(?:\s+([\s\S]*))?$/i
-            );
-            if (!match) {
-                return;
-            }
-
-            if (match[1].toLowerCase() !== "checkup") {
-                return {
-                    modifiedPrompt: intensiveCareInstructions(match[2]?.trim()),
-                };
-            }
-
-            return {
-                modifiedPrompt: checkupInstructions(match[2]?.trim()),
-            };
+            const match = input.prompt.match(/^\/(checkup|security-checkup|intensive-care|soins-intensifs)(?:\s+([\s\S]*))?$/i);
+            if (!match) return;
+            const name = match[1].toLowerCase();
+            const scope = match[2]?.trim();
+            const prompt =
+                name === "checkup" ? PROTOCOLS.checkup(scope)
+                : name === "security-checkup" ? PROTOCOLS.securityCheckup(scope)
+                : PROTOCOLS.intensiveCare(scope);
+            return { modifiedPrompt: prompt };
         },
         onSessionStart: async () => {
             await session.log(
-                "La Clinique du Code est disponible via /checkup, /intensive-care, /soins-intensifs, les outils clinic_checkup et clinic_intensive_care. Sous-agents : therapist, diagnostician, radiologist, nutritionist, immunologist, surgeon."
+                "La Clinique du Code est disponible : /checkup, /security-checkup, /intensive-care (/soins-intensifs). Praticiens : therapist, diagnostician, radiologist, nutritionist, immunologist, surgeon."
             );
         },
     },
 });
 
-session.on("subagent.started", async (event) => {
-    await session.log(`Sous-agent ${event.data.agentDisplayName || event.data.agentName} demarre.`);
-});
+for (const [event, verb] of [["subagent.started", "demarre"], ["subagent.completed", "termine"]]) {
+    session.on(event, async (e) => {
+        await session.log(`Sous-agent ${e.data.agentDisplayName || e.data.agentName} ${verb}.`);
+    });
+}
 
-session.on("subagent.completed", async (event) => {
-    await session.log(`Sous-agent ${event.data.agentDisplayName || event.data.agentName} termine.`);
-});
-
-session.on("subagent.failed", async (event) => {
-    await session.log(
-        `Sous-agent ${event.data.agentDisplayName || event.data.agentName} en echec : ${event.data.error}`,
-        { level: "error" }
-    );
+session.on("subagent.failed", async (e) => {
+    await session.log(`Sous-agent ${e.data.agentDisplayName || e.data.agentName} en echec : ${e.data.error}`, { level: "error" });
 });

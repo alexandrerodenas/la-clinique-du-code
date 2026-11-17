@@ -1,640 +1,580 @@
 #!/usr/bin/env node
 "use strict";
 
-const { execSync } = require("child_process");
+/*
+ * Zone-of-pain analyzer v4 — the Architectural Radiologist's imaging device.
+ *
+ * Usage: node zone-of-pain-analyzer.js [--since <date>] [--path <dir>]...
+ *                                       [--top <n>] [--temporal <n>] [--json]
+ *
+ * Run from anywhere inside a git repository. Read-only: it runs `git ls-files`
+ * and `git log`, reads tracked source files, and prints a report to stdout.
+ * It never writes a file. Requirements: Node.js >= 14, git, no npm install.
+ *
+ * Pain = sqrt(normalized churn × normalized coupling): a file scores only when
+ * it changes often AND many files depend on it.
+ */
+
+const { execFileSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
-/*
- * ╔══════════════════════════════════════════════════════════════════╗
- * ║  ZONE-OF-PAIN ANALYZER v3 — Fixed path prefixes, test exclusions, temporal coupling ║
- * ║  Usage: node zone-of-pain-analyzer.js                           ║
- * ║  Run from a git project root; prints the report to stdout.      ║
- * ║  Requirements: Node.js >= 14, no npm install needed.            ║
- * ╚══════════════════════════════════════════════════════════════════╝
- */
+const VERSION = "4.0.0";
 
 // ──────────────────────────────────────────────────────────────
-// CONFIG & FILTERS
+// Configuration
 // ──────────────────────────────────────────────────────────────
+
+const SOURCE_EXT = new Set([
+  ".java", ".kt", ".kts", ".scala",
+  ".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".mts", ".cts", ".vue", ".svelte",
+  ".py", ".rb", ".php", ".go", ".rs", ".cs",
+]);
 
 const EXCLUDE_DIRS = new Set([
-  "node_modules", "target", "build", "dist", ".git", ".idea",
-  ".vscode", "out", "__pycache__", ".next", ".nuxt",
+  "node_modules", "vendor", "target", "build", "dist", "out", "coverage",
+  ".git", ".idea", ".vscode", "__pycache__", ".next", ".nuxt", ".venv", "venv",
+  "generated", "__generated__", "migrations",
 ]);
 
-const EXCLUDE_FILES = new Set([
-  "pom.xml", "package.json", "package-lock.json", "yarn.lock", "pnpm-lock.yaml",
-  "tsconfig.json", "jsconfig.json", "build.gradle", "settings.gradle",
-  "Cargo.toml", "renovate.json", ".prettierrc", ".eslintrc",
-]);
+const TEST_DIRS = new Set(["test", "tests", "__tests__", "spec", "specs", "testing", "e2e"]);
 
-const SOURCE_EXT = new Set([".java", ".js", ".jsx", ".ts", ".tsx", ".py", ".cs", ".go", ".rb", ".rs", ".kt", ".kts"]);
-
-// Source dir patterns — discovered recursively at any depth
-const SRC_PATTERNS = ["src/main/java", "src/main/ts", "src/main/js", "src", "source", "lib", "app", "packages"];
+/** Commits touching more files than this are ignored for temporal coupling
+ * (mass renames, reformatting, dependency bumps say nothing about design). */
+const MAX_FILES_PER_COMMIT_FOR_TEMPORAL = 50;
 
 // ──────────────────────────────────────────────────────────────
-// HELPER FUNCTIONS
+// Path helpers
 // ──────────────────────────────────────────────────────────────
 
-function isSourceFile(filePath) {
-  const ext = path.extname(filePath).toLowerCase();
-  if (!SOURCE_EXT.has(ext)) return false;
-  const base = path.basename(filePath);
-  if (EXCLUDE_FILES.has(base)) return false;
-  // Exclude test files: names ending in Test/Spec, or paths containing /test/
-  if (/^.*[Tt]est(\+\+|\..*)?$/.test(base) || /^.*[Ss]pec(\+\+|\..*)?$/.test(base)) return false;
-  if (/\.test\./.test(filePath) || /\.spec\./.test(filePath)) return false;
-  // Also filter files in test directories
-  const normalized = filePath.replace(/\\/g, "/");
-  const segments = normalized.split("/");
-  if (segments.some(s => /^test(s)?$/.test(s))) return false;
-  for (const seg of segments) {
-    if (EXCLUDE_DIRS.has(seg)) return false;
-  }
-  return true;
+function toPosix(filePath) {
+  return filePath.replace(/\\/g, "/").replace(/^\.\//, "");
 }
 
-function isTestFile(filePath) {
-  const base = path.basename(filePath, path.extname(filePath));
-  if (/Test$/.test(base) || /Spec$/.test(base)) return true;
-  const normalized = filePath.replace(/\\/g, "/");
-  const segments = normalized.split("/");
-  if (segments.some(s => /^test(s)?$/.test(s))) return true;
-  if (/\.test\./.test(filePath) || /\.spec\./.test(filePath)) return true;
-  return false;
-}
-
-function norm(f) { return f.replace(/\\/g, "/").replace(/^\.\//, ""); }
-
-function splitPathSegments(filePath) {
-  return norm(filePath).split("/").filter(Boolean);
-}
-
-function stripSourceExtension(filePath) {
-  const ext = path.extname(filePath);
+function stripExtension(filePath) {
+  const ext = path.posix.extname(filePath);
   return ext ? filePath.slice(0, -ext.length) : filePath;
 }
 
-function buildAliases(filePath) {
-  const normalized = norm(filePath);
-  const withoutExt = stripSourceExtension(normalized);
-  const segments = splitPathSegments(withoutExt);
-  const aliases = new Set();
-
-  for (let i = 0; i < segments.length; i++) {
-    aliases.add(segments.slice(i).join("/"));
-  }
-
-  aliases.add(segments.join("."));
-  aliases.add(segments[segments.length - 1]);
-  aliases.add("./" + segments.join("/"));
-  aliases.add("../" + segments.join("/"));
-  return [...aliases].filter(Boolean);
+function isTestFile(filePath) {
+  const normalized = toPosix(filePath);
+  const segments = normalized.split("/");
+  if (segments.slice(0, -1).some((s) => TEST_DIRS.has(s.toLowerCase()))) return true;
+  const base = stripExtension(segments[segments.length - 1]);
+  return (
+    /[.\-_](test|spec|tests|specs)$/i.test(base) || // a.test.ts, a_test.go, a-spec.js
+    /^test_/i.test(base) || //                         test_a.py
+    /[a-z0-9](Test|Tests|Spec|IT)$/.test(base) || //  FooTest.java, FooSpec.kt, FooIT.java
+    /^(conftest|setupTests)$/.test(base)
+  );
 }
+
+function isSourceFile(filePath) {
+  const normalized = toPosix(filePath);
+  if (!SOURCE_EXT.has(path.posix.extname(normalized).toLowerCase())) return false;
+  const segments = normalized.split("/");
+  if (segments.slice(0, -1).some((s) => EXCLUDE_DIRS.has(s))) return false;
+  if (/\.d\.[cm]?ts$|\.min\.js$|\.generated\./.test(normalized)) return false;
+  return !isTestFile(normalized);
+}
+
+function inScope(filePath, scopes) {
+  if (scopes.length === 0) return true;
+  return scopes.some((scope) => filePath === scope || filePath.startsWith(scope + "/"));
+}
+
+// ──────────────────────────────────────────────────────────────
+// Import extraction
+// ──────────────────────────────────────────────────────────────
 
 function langForFile(filePath) {
-  const ext = path.extname(filePath).toLowerCase();
+  const ext = path.posix.extname(filePath).toLowerCase();
+  if ([".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".mts", ".cts", ".vue", ".svelte"].includes(ext)) return "js";
   if (ext === ".py") return "python";
   if (ext === ".go") return "go";
-  if (ext === ".ts" || ext === ".tsx") return "ts";
-  if (ext === ".js" || ext === ".jsx") return "js";
-  if (ext === ".rb") return "rb";
-  if (ext === ".cs") return "cs";
-  return "generic";
+  if (ext === ".rb") return "ruby";
+  if (ext === ".rs") return "rust";
+  if (ext === ".cs") return "csharp";
+  if (ext === ".php") return "php";
+  return "jvm"; // java, kotlin, scala
 }
 
-function extractImportCandidates(line, lang) {
-  const trimmed = line.trim();
-  const candidates = [];
-
-  let m = trimmed.match(/^import\s+(?:static\s+)?([\w.\/]+)/);
-  if (m) candidates.push(m[1]);
-
-  m = trimmed.match(/^from\s+([\w.\/]+)\s+import\s+/);
-  if (m) candidates.push(m[1]);
-
-  m = trimmed.match(/^using\s+([\w.\/]+)\s*;/);
-  if (m) candidates.push(m[1]);
-
-  if (lang === "go") {
-    m = trimmed.match(/^import\s+\"([^\"]+)\"/);
-    if (m) candidates.push(m[1]);
-    m = trimmed.match(/^\"([^\"]+)\"$/);
-    if (m) candidates.push(m[1]);
-  }
-
-  if (lang === "ts" || lang === "js") {
-    m = trimmed.match(/^(?:import|export)\s+.*?from\s+["']([^"']+)["']/);
-    if (m) candidates.push(m[1]);
-    m = trimmed.match(/^import\s+["']([^"']+)["']/);
-    if (m) candidates.push(m[1]);
-    m = trimmed.match(/^require\(["']([^"']+)["']\)/);
-    if (m) candidates.push(m[1]);
-  }
-
-  if (lang === "rb") {
-    m = trimmed.match(/^require(?:_relative)?\s+["']([^"']+)["']/);
-    if (m) candidates.push(m[1]);
-    m = trimmed.match(/^autoload\s+:[\w?]+,\s+["']([^"']+)["']/);
-    if (m) candidates.push(m[1]);
-  }
-
-  if (lang === "cs") {
-    m = trimmed.match(/^using\s+([A-Za-z0-9_.]+)\s*;/);
-    if (m) candidates.push(m[1]);
-    m = trimmed.match(/^global\s+using\s+([A-Za-z0-9_.]+)\s*;/);
-    if (m) candidates.push(m[1]);
-  }
-
-  return candidates;
-}
-
-function shouldSkipExternalImport(token, lang) {
-  const common = [
-    "typing", "collections", "dataclasses", "contextlib", "pathlib", "asyncio",
-    "os", "sys", "re", "json", "time", "datetime", "math", "uuid", "base64",
-    "logging", "itertools", "urllib", "functools", "inspect", "subprocess",
-  ];
-  const javaLike = [
-    "java.", "javax.", "jakarta.", "org.xml.", "org.slf4j.", "ch.qos.logback.",
-    "com.fasterxml.", "org.apache.", "org.springframework.", "org.hibernate.",
-  ];
-  const cs = ["System.", "Microsoft.", "Newtonsoft."];
-  const ruby = ["json", "yaml", "set", "open-uri", "net/http", "logger"];
-
-  const prefixes = [...common];
-  if (lang === "cs") prefixes.push(...cs);
-  if (lang === "rb") prefixes.push(...ruby);
-  if (lang === "java" || lang === "generic") prefixes.push(...javaLike);
-
-  return prefixes.some((prefix) => token === prefix || token.startsWith(prefix + ".") || token.startsWith(prefix + "/"));
-}
-
-// ──────────────────────────────────────────────────────────────
-// STEP 1: GIT CHURN — Pure Node.js
-// ──────────────────────────────────────────────────────────────
-
-function computeChurn(srcDirs) {
-  console.log("\n📈 [Step 1/4] Computing git churn...");
-
-  try {
-    const raw = execSync("git log --all --format= --name-only", {
-      encoding: "utf-8",
-      maxBuffer: 100 * 1024 * 1024,
-    });
-
-    const srcNorms = srcDirs.map(d => norm(d));
-    const counts = new Map();
-    for (const line of raw.split("\n")) {
-      const f = line.trim();
-      if (!f) continue;
-      const rel = norm(f);
-      for (const srcNorm of srcNorms) {
-        if (rel.startsWith(srcNorm)) {
-          const inner = rel.substring(srcNorm.length).replace(/^\//, "");
-          if (isSourceFile(inner) && !isTestFile(inner)) {
-            counts.set(inner, (counts.get(inner) || 0) + 1);
-          }
-          break;
-        }
-      }
-    }
-
-    const sorted = [...counts.entries()].sort((a, b) => b[1] - a[1]);
-    console.log(
-      "  ✅ Found %d source files with git history.",
-      sorted.length
-    );
-    return sorted;
-  } catch (err) {
-    console.error("  ❌ Failed to compute churn:", err.message);
-    return [];
-  }
-}
-
-// ──────────────────────────────────────────────────────────────
-// STEP 2: STATIC IMPORT ANALYSIS — Java FQN -> Path
-// ──────────────────────────────────────────────────────────────
-
-function computeCoupling(srcDirs) {
-  console.log("\n🔗 [Step 2/4] Analyzing static imports & coupling...");
-
-  // Discover all source files across all source directories
-  const allSourceFiles = new Set();
-  const sourceFiles = new Set();
-
-  function walk(dir, baseDir) {
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      const full = path.join(dir, entry.name);
-      if (entry.isDirectory()) {
-        if (EXCLUDE_DIRS.has(entry.name)) continue;
-        walk(full, baseDir);
-        continue;
-      }
-      if (!entry.isFile() || !isSourceFile(full)) continue;
-      const rel = norm(path.relative(baseDir, full));
-      allSourceFiles.add(rel);
-      if (!isTestFile(rel)) {
-        sourceFiles.add(rel);
-      }
-    }
-  }
-  for (const sd of srcDirs) {
-    walk(sd, sd);
-  }
-  console.log("  Discovered %d source files (%d non-test).", allSourceFiles.size, sourceFiles.size);
-
-  // Build reverse import map: source_file -> Set of files it imports
-  // Only track imports from non-test files into non-test files
-  const importMap = {};
-  sourceFiles.forEach((f) => { importMap[f] = new Set(); });
-
-  // Count incoming imports per target
-  const incomingCount = {};
-  sourceFiles.forEach((f) => { incomingCount[f] = 0; });
-
-  const aliasToFile = new Map();
-  for (const filePath of allSourceFiles) {
-    for (const alias of buildAliases(filePath)) {
-      if (!aliasToFile.has(alias)) aliasToFile.set(alias, filePath);
-    }
-  }
-
-  function resolveImport(token, currentFile) {
-    const normalized = token.replace(/::/g, "/");
-    const dotNormalized = token.replace(/\./g, "/");
-    const candidates = new Set([token, normalized, dotNormalized, stripSourceExtension(normalized), stripSourceExtension(dotNormalized)]);
-
-    const currentDir = path.posix.dirname(currentFile);
-    if (token.startsWith(".") || token.startsWith("/")) {
-      const rel = norm(path.posix.join(currentDir, token));
-      candidates.add(rel);
-      candidates.add(stripSourceExtension(rel));
-    }
-
-    for (const candidate of [...candidates]) {
-      if (aliasToFile.has(candidate)) return aliasToFile.get(candidate);
-      const parts = splitPathSegments(candidate);
-      for (let i = 0; i < parts.length; i++) {
-        const suffix = parts.slice(i).join("/");
-        if (aliasToFile.has(suffix)) return aliasToFile.get(suffix);
-      }
-    }
-
-    return null;
-  }
-
-  // Parse imports from each source file — try all source dirs to find it
-  let importStats = { totalLines: 0, matchingImports: 0, resolvedImports: 0 };
-  for (const filePath of allSourceFiles) {
-    let content;
-    let found = false;
-    for (const sd of srcDirs) {
-      const full = path.join(sd, filePath.replace(/\//g, path.sep));
-      try {
-        content = fs.readFileSync(full, "utf-8");
-        found = true;
-        break;
-      } catch { /* try next src dir */ }
-    }
-    if (!found) continue;
-
-    const lang = langForFile(filePath);
-
-    const lines = content.split("\n");
-    for (const line of lines) {
-      const trimmed = line.trim();
-      importStats.totalLines++;
-
-      const candidates = extractImportCandidates(trimmed, lang);
-      if (candidates.length === 0) continue;
-
-      for (const rawToken of candidates) {
-        importStats.matchingImports++;
-        if (shouldSkipExternalImport(rawToken, lang)) continue;
-
-        const target = resolveImport(rawToken, filePath);
-        if (target && sourceFiles.has(target)) {
-          importMap[filePath] = importMap[filePath] || new Set();
-          importMap[filePath].add(target);
-          incomingCount[target]++;
-          importStats.resolvedImports++;
-        }
-      }
-    }
-  }
-
-  console.log(
-    "  Parsed %d lines, %d matching imports, %d resolved to project files.",
-    importStats.totalLines,
-    importStats.matchingImports,
-    importStats.resolvedImports
-  );
-
-  // Count files with >0 incoming imports
-  const withImports = Object.entries(incomingCount)
-    .filter(([, c]) => c > 0)
-    .sort((a, b) => b[1] - a[1]);
-  console.log("  %d files have incoming internal imports.", withImports.length);
-
-  return { importMap, incomingCount };
-}
-
-// ──────────────────────────────────────────────────────────────
-// STEP 3: ZONE OF PAIN
-// ──────────────────────────────────────────────────────────────
-
-function computePainZones(sortedChurn, incomingCount) {
-  console.log("\n⚡ [Step 3/4] Calculating Zone of Pain scores...");
-
-  // Only score non-test source files that exist in both churn and coupling data
-  const allFiles = new Set([
-    ...sortedChurn.map((e) => e[0]),
-    ...Object.keys(incomingCount),
-  ]);
-
-  const maxChurn = Math.max(...sortedChurn.map((e) => e[1]), 1);
-  const maxCoupling = Math.max(...Object.values(incomingCount), 1);
-
-  const scored = [];
-  for (const f of allFiles) {
-    // Skip test files
-    if (isTestFile(f)) continue;
-
-    const churn = sortedChurn.find((e) => e[0] === f)?.[1] || 0;
-    const coupling = incomingCount[f] || 0;
-
-    const nc = churn / maxChurn;
-    const ni = coupling / maxCoupling;
-
-    // Geometric mean: requires BOTH high churn AND high coupling to score high
-    const pain =
-      nc > 0 && ni > 0 ? Math.sqrt(nc * ni) : 0;
-
-    scored.push({ file: f, churn, coupling, nc: +nc.toFixed(3), ni: +ni.toFixed(3), pain: +pain.toFixed(3) });
-  }
-
-  scored.sort((a, b) => b.pain - a.pain);
-
-  const top15 = scored.filter(s => s.pain > 0).slice(0, 15);
-  console.log(
-    "  Generated pain scores for %d files (%d with pain > 0). Top 15 below.",
-    scored.length,
-    top15.length
-  );
-  return top15;
-}
-
-function renderPainTable(rankings) {
-  let md = "| # | File | Churn | Coupling | Pain |\n";
-  md += "|---|------|-------|----------|------|\n";
-
-  for (let i = 0; i < rankings.length; i++) {
-    const r = rankings[i];
-    md += `| ${i + 1} | \`${r.file}\` | ${r.churn} | ${r.coupling} | ${r.pain.toFixed(3)} |\n`;
-  }
-  return md;
-}
-
-// ──────────────────────────────────────────────────────────────
-// STEP 4: TEMPORAL COUPLING — co-modified files
-// ──────────────────────────────────────────────────────────────
-
-function computeTemporalCoupling(sortedChurn, topN = 5) {
-  console.log(`\n🕰️  [Step 4/4] Analyzing temporal coupling (top ${topN} most unstable)...`);
-
-  const targets = sortedChurn.slice(0, topN).map((e) => e[0]);
-  const tSet = new Set(targets);
-
-  // Also collect all non-test source files that might appear with targets
-  const tSrcDirs = findAllSrcDirs();
-  if (!tSrcDirs) {
-    console.log("  ⚠️  Could not find source directory.");
-    return "";
-  }
-
-  const allSourceSet = new Set();
-  function walkAll(dir, baseDir) {
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      const full = path.join(dir, entry.name);
-      if (entry.isDirectory()) {
-        if (EXCLUDE_DIRS.has(entry.name)) continue;
-        walkAll(full, baseDir);
-        continue;
-      }
-      if (!entry.isFile()) continue;
-      const rel = norm(path.relative(baseDir, full));
-      if (isSourceFile(rel) && !isTestFile(rel)) {
-        allSourceSet.add(rel);
-      }
-    }
-  }
-  for (const sd of tSrcDirs) {
-    walkAll(sd, sd);
-  }
-
-  console.log("  Tracking %d source files across all commits.", allSourceSet.size);
-
-  try {
-    const srcNorms = tSrcDirs.map(d => norm(d));
-
-    // Use hash directly as separator — %H outputs exactly 40 hex chars
-    // Each commit section: hash line, then file lines, then blank, then next hash
-    const raw = execSync(
-      'git log --all --format="COMMIT:%H" --name-only',
-      { encoding: "utf-8", maxBuffer: 200 * 1024 * 1024 }
-    );
-
-    // Manual parsing: split on "COMMIT:" prefix followed by 40 hex chars
-    const commits = [];
-    let currentFiles = [];
-    let inCommit = false;
-
-    for (const line of raw.split("\n")) {
-      const trimmed = line.trim();
-
-      // Check for commit header
-      if (trimmed.startsWith("COMMIT:")) {
-        const hash = trimmed.substring(7).trim();
-        // Valid git hash is exactly 40 hex chars
-        if (/^[0-9a-fA-F]{40}$/.test(hash) && currentFiles.length > 0) {
-          commits.push(currentFiles);
-        }
-        currentFiles = [];
-        inCommit = true;
-        continue;
-      }
-
-      if (!inCommit) continue;
-
-      const f = trimmed;
-      if (!f) continue;
-      const rel = norm(f);
-      let matched = false;
-      let n = "";
-      for (const sn of srcNorms) {
-        if (rel.startsWith(sn)) {
-          n = rel.substring(sn.length).replace(/^\//, "");
-          matched = true;
-          break;
-        }
-      }
-      if (!matched) continue;
-      // Only track non-test source files
-      if (allSourceSet.has(n)) {
-        currentFiles.push(n);
-      }
-    }
-    // Last commit
-    if (inCommit && currentFiles.length > 0) {
-      commits.push(currentFiles);
-    }
-
-    console.log("  Analyzed %d commits for co-modification patterns.", commits.length);
-
-    // Build co-occurrence map: for each target file, count how often other files appear in same commit
-    const coMods = {};
-    targets.forEach((t) => { coMods[t] = new Map(); });
-
-    let coModifiedCount = 0;
-    for (const commit of commits) {
-      // Find which targets are in this commit
-      const relevant = commit.filter((f) => tSet.has(f));
-      if (relevant.length < 2) continue;
-
-      coModifiedCount++;
-
-      // All pairs of files in this commit that include at least one target
-      const filesInCommit = new Set(commit);
-      for (const target of targets) {
-        if (!filesInCommit.has(target)) continue;
-        for (const otherFile of commit) {
-          if (otherFile === target) continue;
-          const count = coMods[target].get(otherFile) || 0;
-          coMods[target].set(otherFile, count + 1);
-        }
-      }
-    }
-
-    console.log(`  Found co-modifications in ${coModifiedCount} commits.`);
-
-    // Render per target
-    let md = "";
-    for (const tFile of targets) {
-      const churn = sortedChurn.find((e) => e[0] === tFile)?.[1] ?? "?";
-      md += `### \`${tFile}\` (churn: ${churn})\n\n`;
-      md += "Most frequently co-modified with:\n\n";
-
-      const pairs = [...coMods[tFile].entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
-
-      if (pairs.length === 0) {
-        md += "  (none found)\n\n";
-        continue;
-      }
-
-      md += "| File | Times co-modified |\n|------|----------|\n";
-      for (const [f, c] of pairs) {
-        md += `| \`${f}\` | ${c} |\n`;
-      }
-      md += "\n";
-    }
-
-    return md;
-  } catch (err) {
-    console.log("  ❌ Failed to analyze temporal coupling:", err.message);
-    return "";
-  }
-}
-
-// ──────────────────────────────────────────────────────────────
-// MAIN
-// ──────────────────────────────────────────────────────────────
-
-function findAllSrcDirs() {
+/**
+ * Returns import specifiers found in a file, each as
+ * { spec, relative, kind } where kind is "module" (a file) or "package"
+ * (a directory: Go packages, C# namespaces, JVM wildcard imports).
+ */
+function extractImports(content, lang) {
   const found = [];
-  const root = process.cwd();
-  function walk(dir) {
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      if (!entry.isDirectory()) continue;
-      if (EXCLUDE_DIRS.has(entry.name)) continue;
-      const fullPath = path.join(dir, entry.name);
-      const relPath = norm(path.relative(root, fullPath));
-      if (SRC_PATTERNS.some(p => relPath === p || relPath.endsWith("/" + p))) {
-        found.push(relPath);
+  const add = (spec, relative, kind) => {
+    if (spec) found.push({ spec, relative: Boolean(relative), kind: kind || "module" });
+  };
+  const lines = content.split(/\r?\n/);
+  let inGoImportBlock = false;
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("//") || line.startsWith("#!")) continue;
+    let m;
+
+    if (lang === "js") {
+      const fromRe = /(?:^|\s|})from\s+["']([^"']+)["']/g;
+      while ((m = fromRe.exec(line))) add(m[1], m[1].startsWith("."));
+      if ((m = line.match(/^import\s+["']([^"']+)["']/))) add(m[1], m[1].startsWith("."));
+      const callRe = /\b(?:require|import)\s*\(\s*["']([^"']+)["']\s*\)/g;
+      while ((m = callRe.exec(line))) add(m[1], m[1].startsWith("."));
+    } else if (lang === "python") {
+      if ((m = line.match(/^from\s+(\.*)([\w.]*)\s+import\s+(.+)$/))) {
+        const dots = m[1];
+        const base = m[2];
+        const names = m[3].replace(/[()]/g, "").split(",").map((n) => n.trim().split(/\s+/)[0]).filter(Boolean);
+        for (const name of names) {
+          if (name !== "*") add(dots + (base ? base + "." : "") + name, dots.length > 0);
+        }
+        add(dots + base, dots.length > 0);
+      } else if ((m = line.match(/^import\s+(.+)$/))) {
+        for (const part of m[1].split(",")) add(part.trim().split(/\s+/)[0], false);
       }
-      walk(fullPath);
+    } else if (lang === "go") {
+      if (/^import\s*\($/.test(line)) { inGoImportBlock = true; continue; }
+      if (inGoImportBlock && line.startsWith(")")) { inGoImportBlock = false; continue; }
+      if ((m = line.match(/^import\s+(?:[\w.]+\s+)?"([^"]+)"/))) add(m[1], false, "package");
+      else if (inGoImportBlock && (m = line.match(/^(?:[\w.]+\s+)?"([^"]+)"/))) add(m[1], false, "package");
+    } else if (lang === "ruby") {
+      if ((m = line.match(/^require_relative\s+["']([^"']+)["']/))) add("./" + m[1].replace(/^\.\//, ""), true);
+      else if ((m = line.match(/^(?:require|load)\s+["']([^"']+)["']/))) add(m[1], false);
+      else if ((m = line.match(/^autoload\s+:\w+,\s*["']([^"']+)["']/))) add(m[1], false);
+    } else if (lang === "rust") {
+      if ((m = line.match(/^(?:pub(?:\([\w:]+\))?\s+)?use\s+((?:crate|super|self)(?:::\w+)+)/))) add(m[1], true);
+      else if ((m = line.match(/^(?:pub(?:\([\w:]+\))?\s+)?mod\s+(\w+)\s*;/))) add("self::" + m[1], true);
+    } else if (lang === "csharp") {
+      if ((m = line.match(/^(?:global\s+)?using\s+(?:static\s+)?([A-Za-z_][\w.]*)\s*;/))) add(m[1], false, "package");
+    } else if (lang === "php") {
+      if ((m = line.match(/^use\s+(?:function\s+|const\s+)?([\w\\]+)/))) add(m[1].replace(/\\/g, "/"), false);
+      else if ((m = line.match(/^(?:require|include)(?:_once)?\s*\(?\s*__DIR__\s*\.\s*["']([^"']+)["']/))) add("." + m[1], true);
+    } else {
+      if ((m = line.match(/^import\s+(?:static\s+)?([\w.]+?)(\.\*)?(?:\s+as\s+\w+)?\s*;?$/))) add(m[1], false, m[2] ? "package" : "module");
     }
   }
-  walk(root);
-  // Remove parent dirs when a more specific subdir is present (e.g. keep src/main/java, drop src)
-  const filtered = found.filter(f =>
-    !found.some(other => other !== f && other.startsWith(f + "/"))
-  );
-  return filtered.length > 0 ? filtered : null;
+  return found;
 }
 
-function main() {
-  console.log(
-    "\n" +
-    "╔═══════════════════════════════════════════════════════════════╗\n" +
-    "║  ZONE-OF-PAIN ANALYZER v3 — Multi-module discovery           ║\n" +
-    "║  Run: node zone-of-pain-analyzer.js                           ║\n" +
-    "╚═══════════════════════════════════════════════════════════════╝\n"
-  );
+// ──────────────────────────────────────────────────────────────
+// Import resolution
+// ──────────────────────────────────────────────────────────────
 
-  const srcDirs = findAllSrcDirs();
-  if (!srcDirs) {
-    console.error("\n❌ No source directory found. Run from your project root.");
-    process.exit(1);
+const INDEX_NAMES = new Set(["index", "__init__", "mod", "main", "lib"]);
+
+function buildIndex(files) {
+  const byExactPath = new Map(); // "src/a/b" (no ext) -> file
+  const bySuffix = new Map(); //    "a/b", "b" -> [files]
+  const byDir = new Map(); //       "src/a" -> [files]
+  const byDirSuffix = new Map(); // "a", "src/a" -> [dirs]
+
+  const push = (map, key, value) => {
+    if (!map.has(key)) map.set(key, []);
+    if (!map.get(key).includes(value)) map.get(key).push(value);
+  };
+
+  for (const file of files) {
+    const noExt = stripExtension(file);
+    const segments = noExt.split("/");
+    const keys = [noExt];
+    if (INDEX_NAMES.has(segments[segments.length - 1]) && segments.length > 1) {
+      keys.push(segments.slice(0, -1).join("/"));
+    }
+    for (const key of keys) {
+      if (!byExactPath.has(key)) byExactPath.set(key, file);
+      const parts = key.split("/");
+      for (let i = 0; i < parts.length; i++) push(bySuffix, parts.slice(i).join("/"), file);
+    }
+    const dir = path.posix.dirname(file);
+    push(byDir, dir, file);
+    const dirParts = dir === "." ? [] : dir.split("/");
+    for (let i = 0; i < dirParts.length; i++) push(byDirSuffix, dirParts.slice(i).join("/"), dir);
   }
-  console.log(`  Found ${srcDirs.length} source directories:`);
-  for (const sd of srcDirs) {
-    console.log(`    ${sd}`);
-  }
-
-  // Step 1: Churn
-  const sortedChurn = computeChurn(srcDirs);
-  if (sortedChurn.length === 0) {
-    console.error("\n❌ No churn data found. Is this a git repository?");
-    process.exit(1);
-  }
-  console.log(`  Top 5 by churn:`);
-  for (const [f, c] of sortedChurn.slice(0, 5)) {
-    console.log(`    ${c} commits → ${f}`);
-  }
-
-  // Step 2: Coupling
-  const { importMap, incomingCount } = computeCoupling(srcDirs);
-
-  // Step 3: Pain zones
-  const painZones = computePainZones(sortedChurn, incomingCount);
-
-  console.log("\n" + "=".repeat(72));
-  console.log("  TOP 15 — ZONE OF PAIN FILES");
-  console.log("  (Score = √(normalizedChurn × normalizedCoupling))");
-  console.log("  Only non-test source files. Pain > 0 means BOTH churn AND coupling > 0.");
-  console.log("=".repeat(72) + "\n");
-
-  const tableMd = renderPainTable(painZones);
-  console.log(tableMd);
-  console.log(`  Legend: Churn = commit count, Coupling = # files importing this one.\n`);
-
-  // Step 4: Temporal coupling
-  console.log("=".repeat(72));
-  console.log("  TEMPORAL COUPLING — Co-modified files");
-  console.log("  (Files appearing together in the same commits)");
-  console.log("=".repeat(72) + "\n");
-
-  const temporalMd = computeTemporalCoupling(sortedChurn, 5);
-  console.log(temporalMd || "  (no temporal data available)\n");
-
-  // Summary
-  console.log("=".repeat(72));
-  console.log("  ✅ Analysis complete.");
-  console.log("=".repeat(72) + "\n");
-
+  return { byExactPath, bySuffix, byDir, byDirSuffix };
 }
 
-main();
+function commonPrefixLength(a, b) {
+  const pa = a.split("/");
+  const pb = b.split("/");
+  let i = 0;
+  while (i < pa.length && i < pb.length && pa[i] === pb[i]) i++;
+  return i;
+}
+
+function closest(candidates, fromFile) {
+  if (candidates.length === 1) return candidates[0];
+  let best = null;
+  let bestScore = -1;
+  let tie = false;
+  for (const c of candidates) {
+    const score = commonPrefixLength(path.posix.dirname(c), path.posix.dirname(fromFile));
+    if (score > bestScore) { best = c; bestScore = score; tie = false; }
+    else if (score === bestScore) tie = true;
+  }
+  return tie ? null : best; // ambiguous: better no edge than a wrong one
+}
+
+/** Converts an import specifier into slash-separated candidate paths. */
+function specToPaths(imp, fromFile, lang) {
+  const fromDir = path.posix.dirname(fromFile);
+  const spec = imp.spec;
+
+  if (lang === "python" && imp.relative) {
+    const dots = spec.match(/^\.+/)[0].length;
+    let base = fromDir;
+    for (let i = 1; i < dots; i++) base = path.posix.dirname(base);
+    const rest = spec.slice(dots).replace(/\./g, "/");
+    return { exact: [rest ? path.posix.join(base, rest) : base] };
+  }
+  if (lang === "rust" && imp.relative) {
+    const parts = spec.split("::");
+    let base = parts[0] === "crate" ? null : fromDir;
+    if (parts[0] === "super") base = path.posix.dirname(fromDir);
+    const rest = parts.slice(1);
+    const exact = [];
+    for (let n = rest.length; n > 0; n--) {
+      const tail = rest.slice(0, n).join("/");
+      if (base) exact.push(path.posix.join(base, tail));
+    }
+    // crate:: paths are rooted at src/ of the crate: fall back to suffixes
+    return { exact, suffix: base ? [] : rest.map((_, n) => rest.slice(0, rest.length - n).join("/")) };
+  }
+  if (imp.relative) {
+    return { exact: [toPosix(path.posix.normalize(path.posix.join(fromDir, stripKnownExt(spec))))] };
+  }
+
+  // Non-relative: module paths, packages, namespaces, aliases (@/x, ~/x).
+  const cleaned = spec.replace(/^[@~]\//, "").replace(/::/g, "/");
+  const slashed = lang === "js" || lang === "go" || lang === "ruby" || lang === "php" ? cleaned : cleaned.replace(/\./g, "/");
+  const parts = stripKnownExt(slashed).split("/").filter(Boolean);
+  const suffix = [];
+  // Full spec first, then without leading segments (namespace roots rarely
+  // match folders: com.acme.billing.Invoice -> billing/Invoice).
+  for (let i = 0; i < parts.length; i++) {
+    const s = parts.slice(i).join("/");
+    if (parts.length - i >= 2 || parts.length === 1) suffix.push(s);
+  }
+  // JVM static imports and Python "from pkg import name" may end with a member.
+  if ((lang === "jvm" || lang === "python") && parts.length > 2) {
+    const owner = parts.slice(0, -1);
+    for (let i = 0; i < owner.length - 1; i++) suffix.push(owner.slice(i).join("/"));
+  }
+  return { exact: [], suffix };
+}
+
+function stripKnownExt(spec) {
+  const ext = path.posix.extname(spec).toLowerCase();
+  return SOURCE_EXT.has(ext) ? spec.slice(0, -ext.length) : spec;
+}
+
+/** Returns the list of project files an import points to (possibly empty). */
+function resolveImport(imp, fromFile, lang, index) {
+  const { exact = [], suffix = [] } = specToPaths(imp, fromFile, lang);
+
+  for (const candidate of exact) {
+    if (imp.kind === "package" && index.byDir.has(candidate)) return index.byDir.get(candidate);
+    if (index.byExactPath.has(candidate)) return [index.byExactPath.get(candidate)];
+  }
+  for (const candidate of suffix) {
+    if (imp.kind === "package") {
+      const dirs = index.byDirSuffix.get(candidate);
+      if (dirs) {
+        const dir = closest(dirs, fromFile);
+        if (dir) return index.byDir.get(dir);
+      }
+    }
+    const files = index.bySuffix.get(candidate);
+    if (files) {
+      // A single-segment specifier ("utils") must be unambiguous.
+      const file = candidate.includes("/") ? closest(files, fromFile) : files.length === 1 ? files[0] : null;
+      if (file) return [file];
+    }
+  }
+  return [];
+}
+
+// ──────────────────────────────────────────────────────────────
+// Git
+// ──────────────────────────────────────────────────────────────
+
+function git(args, cwd) {
+  return execFileSync("git", args, {
+    cwd,
+    encoding: "utf8",
+    maxBuffer: 512 * 1024 * 1024,
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+}
+
+function readCommits(root, since) {
+  const args = ["log", "--no-merges", "--no-renames", "--format=%x00%H", "--name-only"];
+  if (since) args.push(`--since=${since}`);
+  args.push("HEAD", "--");
+  const raw = git(args, root);
+  const commits = [];
+  for (const chunk of raw.split("\0")) {
+    const lines = chunk.split("\n").map((l) => l.trim()).filter(Boolean);
+    if (lines.length < 2) continue;
+    commits.push(lines.slice(1).map(toPosix));
+  }
+  return commits;
+}
+
+// ──────────────────────────────────────────────────────────────
+// Analysis
+// ──────────────────────────────────────────────────────────────
+
+/** How two co-changing files are related: "import", "same package" (Go files
+ * of one directory share a package without importing each other) or "none". */
+function linkBetween(a, b, importers) {
+  if (importers.get(a).has(b) || importers.get(b).has(a)) return "import";
+  if (langForFile(a) === "go" && langForFile(b) === "go" && path.posix.dirname(a) === path.posix.dirname(b)) return "same package";
+  return "none";
+}
+
+function analyze(options) {
+  const opts = Object.assign({ cwd: process.cwd(), since: null, scopes: [], top: 15, temporal: 5 }, options);
+
+  let root;
+  try {
+    root = git(["rev-parse", "--show-toplevel"], opts.cwd).trim();
+  } catch (error) {
+    throw new Error("Not a git repository. Run the analyzer from inside the repository to x-ray.");
+  }
+  const prefix = git(["rev-parse", "--show-prefix"], opts.cwd).trim().replace(/\/$/, "");
+  const scopes = opts.scopes.map((s) => toPosix(path.posix.normalize(path.posix.join(prefix, toPosix(s))))).map((s) => s.replace(/\/$/, "")).filter((s) => s && s !== ".");
+
+  const tracked = git(["ls-files", "-z"], root).split("\0").filter(Boolean).map(toPosix);
+  const sourceFiles = tracked.filter((f) => isSourceFile(f) && fs.existsSync(path.join(root, f)));
+  const sourceSet = new Set(sourceFiles);
+  const scopedFiles = sourceFiles.filter((f) => inScope(f, scopes));
+
+  // 1. Churn
+  let commits = [];
+  try {
+    commits = readCommits(root, opts.since);
+  } catch (error) {
+    commits = []; // empty repository (no HEAD yet)
+  }
+  const churn = new Map();
+  for (const files of commits) {
+    for (const f of files) if (sourceSet.has(f)) churn.set(f, (churn.get(f) || 0) + 1);
+  }
+
+  // 2. Coupling — number of distinct files importing each file
+  const index = buildIndex(sourceFiles);
+  const importers = new Map(sourceFiles.map((f) => [f, new Set()]));
+  let importCount = 0;
+  let resolvedCount = 0;
+  for (const file of sourceFiles) {
+    let content;
+    try {
+      content = fs.readFileSync(path.join(root, file), "utf8");
+    } catch (error) {
+      continue;
+    }
+    const lang = langForFile(file);
+    for (const imp of extractImports(content, lang)) {
+      importCount++;
+      const targets = resolveImport(imp, file, lang, index).filter((t) => t !== file);
+      if (targets.length > 0) resolvedCount++;
+      for (const target of targets) importers.get(target).add(file);
+    }
+  }
+
+  // 3. Pain
+  const coupling = (f) => importers.get(f).size;
+  const maxChurn = scopedFiles.reduce((max, f) => Math.max(max, churn.get(f) || 0), 1);
+  const maxCoupling = scopedFiles.reduce((max, f) => Math.max(max, coupling(f)), 1);
+  const scored = scopedFiles.map((file) => {
+    const c = churn.get(file) || 0;
+    const k = coupling(file);
+    const pain = Math.sqrt((c / maxChurn) * (k / maxCoupling));
+    return { file, churn: c, coupling: k, pain: Number(pain.toFixed(3)) };
+  });
+  const painZones = scored
+    .filter((s) => s.pain > 0)
+    .sort((a, b) => b.pain - a.pain || b.churn - a.churn || a.file.localeCompare(b.file))
+    .slice(0, opts.top);
+
+  const topChurn = scopedFiles
+    .filter((f) => churn.has(f))
+    .map((file) => ({ file, churn: churn.get(file) }))
+    .sort((a, b) => b.churn - a.churn || a.file.localeCompare(b.file))
+    .slice(0, Math.max(opts.temporal, 5));
+
+  // 4. Temporal coupling for the most unstable files
+  const targets = topChurn.slice(0, opts.temporal).map((e) => e.file);
+  const targetSet = new Set(targets);
+  const coChanges = new Map(targets.map((t) => [t, new Map()]));
+  let usableCommits = 0;
+  for (const files of commits) {
+    const relevant = files.filter((f) => sourceSet.has(f));
+    if (relevant.length < 2 || relevant.length > MAX_FILES_PER_COMMIT_FOR_TEMPORAL) continue;
+    usableCommits++;
+    for (const target of relevant.filter((f) => targetSet.has(f))) {
+      const counts = coChanges.get(target);
+      for (const other of relevant) if (other !== target) counts.set(other, (counts.get(other) || 0) + 1);
+    }
+  }
+  const temporalCoupling = targets.map((file) => ({
+    file,
+    churn: churn.get(file),
+    coChangedWith: [...coChanges.get(file).entries()]
+      .map(([other, times]) => ({
+        file: other,
+        times,
+        ratio: Number((times / churn.get(file)).toFixed(2)),
+        link: linkBetween(file, other, importers),
+      }))
+      .filter((e) => e.times >= 2)
+      .sort((a, b) => b.times - a.times || a.file.localeCompare(b.file))
+      .slice(0, 5),
+  }));
+
+  return {
+    version: VERSION,
+    root,
+    since: opts.since,
+    scopes,
+    stats: {
+      sourceFiles: scopedFiles.length,
+      filesWithChurn: scopedFiles.filter((f) => churn.has(f)).length,
+      filesWithIncomingImports: scopedFiles.filter((f) => coupling(f) > 0).length,
+      commits: commits.length,
+      commitsUsedForTemporal: usableCommits,
+      imports: importCount,
+      importsResolved: resolvedCount,
+    },
+    topChurn,
+    painZones,
+    temporalCoupling,
+  };
+}
+
+// ──────────────────────────────────────────────────────────────
+// Rendering
+// ──────────────────────────────────────────────────────────────
+
+function renderMarkdown(r) {
+  const out = [];
+  const s = r.stats;
+  out.push(`# 🩻 Zone of pain — x-ray (analyzer v${r.version})`);
+  out.push("");
+  out.push(`- Repository: \`${path.basename(r.root)}\`${r.scopes.length ? ` · scope: ${r.scopes.map((x) => `\`${x}\``).join(", ")}` : ""}`);
+  out.push(`- History: ${s.commits} commit${s.commits === 1 ? "" : "s"}${r.since ? ` since ${r.since}` : " (full history of HEAD)"}`);
+  out.push(`- Source files (tests excluded): ${s.sourceFiles} · with churn: ${s.filesWithChurn} · with incoming imports: ${s.filesWithIncomingImports}`);
+  out.push(`- Imports parsed: ${s.imports} · resolved to project files: ${s.importsResolved}`);
+  out.push("");
+
+  out.push("## Pain zones");
+  out.push("");
+  out.push("Pain = √(normalized churn × normalized coupling). Churn = commits touching the file; coupling = distinct files importing it.");
+  out.push("");
+  if (r.painZones.length === 0) {
+    out.push("No file is both changing and depended upon: no pain zone detected.");
+  } else {
+    out.push("| # | File | Churn | Coupling | Pain |");
+    out.push("|---|---|---|---|---|");
+    r.painZones.forEach((z, i) => out.push(`| ${i + 1} | \`${z.file}\` | ${z.churn} | ${z.coupling} | ${z.pain.toFixed(3)} |`));
+  }
+  out.push("");
+
+  out.push("## Most unstable files");
+  out.push("");
+  if (r.topChurn.length === 0) out.push("No history for the source files in scope.");
+  else r.topChurn.forEach((e) => out.push(`- ${e.churn} commit${e.churn === 1 ? "" : "s"} — \`${e.file}\``));
+  out.push("");
+
+  out.push("## Temporal coupling");
+  out.push("");
+  out.push(`Files changed together at least twice (commits touching more than ${MAX_FILES_PER_COMMIT_FOR_TEMPORAL} source files are ignored). A pair that co-changes often without importing each other is hidden coupling.`);
+  out.push("");
+  const withPairs = r.temporalCoupling.filter((t) => t.coChangedWith.length > 0);
+  if (withPairs.length === 0) {
+    out.push("No actionable temporal coupling found.");
+  } else {
+    for (const t of withPairs) {
+      out.push(`### \`${t.file}\` (churn ${t.churn})`);
+      out.push("");
+      out.push("| Co-changed with | Times | Share of its commits | Import link |");
+      out.push("|---|---|---|---|");
+      for (const p of t.coChangedWith) {
+        out.push(`| \`${p.file}\` | ${p.times} | ${Math.round(p.ratio * 100)}% | ${p.link === "none" ? "**none — hidden**" : p.link} |`);
+      }
+      out.push("");
+    }
+  }
+  return out.join("\n");
+}
+
+// ──────────────────────────────────────────────────────────────
+// CLI
+// ──────────────────────────────────────────────────────────────
+
+const HELP = `Zone-of-pain analyzer v${VERSION} — read-only git x-ray
+
+Usage: node zone-of-pain-analyzer.js [options]
+
+  --since <date>     Only count history since <date> (git syntax: "12 months ago", 2025-01-01)
+  --path <dir>       Restrict the report to a folder (repeatable); imports from
+                     the whole repository still count toward coupling
+  --top <n>          Number of pain zones to list (default 15)
+  --temporal <n>     Number of unstable files to analyze for temporal coupling (default 5)
+  --json             Print a JSON report instead of Markdown
+  -h, --help         Show this help`;
+
+function parseArgs(argv) {
+  const opts = { since: null, scopes: [], top: 15, temporal: 5, json: false };
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+    const next = () => {
+      if (i + 1 >= argv.length) throw new Error(`Missing value for ${arg}`);
+      return argv[++i];
+    };
+    const positiveInt = (value) => {
+      const n = Number.parseInt(value, 10);
+      if (!Number.isInteger(n) || n <= 0) throw new Error(`${arg} expects a positive integer`);
+      return n;
+    };
+    if (arg === "-h" || arg === "--help") opts.help = true;
+    else if (arg === "--json") opts.json = true;
+    else if (arg === "--since") opts.since = next();
+    else if (arg === "--path") opts.scopes.push(next());
+    else if (arg === "--top") opts.top = positiveInt(next());
+    else if (arg === "--temporal") opts.temporal = positiveInt(next());
+    else throw new Error(`Unknown option: ${arg}`);
+  }
+  return opts;
+}
+
+function main(argv) {
+  let opts;
+  try {
+    opts = parseArgs(argv);
+  } catch (error) {
+    console.error(`${error.message}\n\n${HELP}`);
+    return 2;
+  }
+  if (opts.help) {
+    console.log(HELP);
+    return 0;
+  }
+  try {
+    const report = analyze(opts);
+    console.log(opts.json ? JSON.stringify(report, null, 2) : renderMarkdown(report));
+    return 0;
+  } catch (error) {
+    console.error(`❌ ${error.message}`);
+    return 1;
+  }
+}
+
+module.exports = { analyze, extractImports, isSourceFile, isTestFile, parseArgs, renderMarkdown };
+
+if (require.main === module) {
+  process.exitCode = main(process.argv.slice(2));
+}
