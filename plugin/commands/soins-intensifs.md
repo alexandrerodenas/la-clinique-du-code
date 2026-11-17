@@ -1,8 +1,10 @@
 ---
-description: French alias for the Code Clinic intensive-care command.
-argument-hint: [path|branch:<name>]
+description: "Alias français de /intensive-care : soins intensifs de la Clinique du Code (opère uniquement les constats 🔴/🟠, s'arrête quand il n'en reste plus)."
+argument-hint: "[chemin… | branch:<nom>]"
 ---
 
-Load and apply the `intensive-care` skill. This is the French alias for
-`/intensive-care`; use the same guardrails and requested perimeter:
-`$ARGUMENTS`.
+French alias of `/intensive-care`. Load the `intensive-care` skill (and the
+`checkup` skill it relies on) and apply it in full, with the same guardrails,
+on the requested scope: `$ARGUMENTS`.
+
+Answer the user in French.

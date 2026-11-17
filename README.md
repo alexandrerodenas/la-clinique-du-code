@@ -5,117 +5,116 @@
 ![Approach](https://img.shields.io/badge/approach-portable%20core%20%2B%20adapters-18181B)
 ![Practitioners](https://img.shields.io/badge/practitioners-6-success)
 ![Mode](https://img.shields.io/badge/mode-manual%20%2B%20intensive%20care-important)
-![Checkup](https://img.shields.io/badge/checkup-ready-blue)
-![Language](https://img.shields.io/badge/language-English-9cf)
+![Harnesses](https://img.shields.io/badge/Claude%20Code%20%C2%B7%20OpenCode%20%C2%B7%20Copilot-supported-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 ---
 
 ## 🧭 Why a clinic?
 
-Most initiatives around code agents (planning, TDD, build workflows, and delegation)
-operate **during** development. The Code Clinic positions itself **afterward**,
-as a **post-processing** mechanism.
+Most agent workflows (planning, TDD, delegation) act **while** code is being
+written. The Code Clinic acts **afterward**: a post-processing safety net that
+re-examines the code an agent (or a human) just produced, and catches what
+fast development misses.
 
-It only comes into play once the code has been produced, as a **safety net**:
-an agent loop that revisits the written code to verify its **quality**. It does
-not intervene before or during coding; it catches what rapid development can miss.
+It is **100% manual**:
 
-It is also a **100% manual** philosophy: the Clinic never invites itself into
-your workflow.
+- **You decide when** to consult — after a feature, a refactoring, or when the
+  code looks sick. The assistant may suggest a checkup in one sentence; it
+  never starts one.
+- **Diagnostic practitioners never modify code.** They diagnose and prescribe.
+- **The Surgeon is the only one who operates**, only on a prescription you
+  approved — all of it, or a subset by ID (`operate T1, D2`) — and never more.
 
-- **You decide when** to launch a consultation — after a feature, a refactoring
-or when your code looks sick.
-- **The assistant can suggest**, but never force, a consultation. Its role is
-limited to a gentle reminder at the end of an iteration.
-- **Diagnostic practitioners never modify the code** — they operate in
-plan mode: they diagnose and prescribe, while you decide on the treatment.
-- **The Surgeon is the only one to operate** — only on a validated prescription
-(an assessment from a practitioner plus your agreement). The Surgeon operates
-only on what is prescribed, never more.
-
-There is no intrusive CI, judgmental hook, or robot crying in your pull
-requests. There is only a team of knowledgeable practitioners, available when
-you call them.
+No intrusive CI, no judgmental hook, no robot crying in your pull requests.
+Just a team of practitioners, available when you call them.
 
 ---
 
-## 👨‍⚕️ The clinic team
+## 👨‍⚕️ The team
 
-| Practitioner | Agent | Mode | Role |
-|---|---|---|---|
-| 🧠 Code Therapist | `therapist` | plan | Code quality, architecture, refactorability and compliance with explicit requirements — evidence-based findings with trade-offs |
-| 🔬 Test Diagnostician | `diagnostician` | plan | Reviews unit tests in the laboratory: relevance, robustness, maintainability |
-| 🩻 Architectural Radiologist | `radiologist` | plan | Examines Git history and dependencies: churn, coupling, pain zones |
-| 🥗 Project Nutritionist | `nutritionist` | plan | Verifies that written code is necessary: dead code, speculation (YAGNI), over-engineering, and poor sizing |
-| 🦠 Immunologist | `immunologist` | plan | Security review of a change: maps the portals of entry, hunts reachable threats, and gives each finding an attack path (`/security-checkup`) |
-| 🩺 Surgeon | `surgeon` | build | Executes an approved prescription in sub-agents, batch by batch, with verification |
+| Practitioner | Agent | Mode | Question it answers | IDs |
+|---|---|---|---|---|
+| 🧠 Code Therapist | `therapist` | plan | Is this code well written for its context, and does it do what was asked? | `T1…` |
+| 🔬 Test Diagnostician | `diagnostician` | plan | Would these tests catch a regression? Are any tautological, flaky or slow? | `D1…` |
+| 🩻 Architectural Radiologist | `radiologist` | plan | Where does the git history say the codebase hurts (churn × coupling, hidden co-changes)? | `R1…` |
+| 🥗 Project Nutritionist | `nutritionist` | plan | Should this code exist at all, at this size? | `N1…` |
+| 🦠 Immunologist | `immunologist` | plan | What can an attacker actually reach? Every finding has an attack path. | `X1…` |
+| 🩺 Surgeon | `surgeon` | build | Executes an approved prescription, batch by batch, against a test baseline. | — |
 
-Each diagnostic practitioner in **plan** mode relies on a specialized skill
-(`code-therapist`, `test-diagnostician`, `zone-of-pain`, `nutritionist`, or `immunologist`).
-The Surgeon in **build** mode is the only practitioner who can modify code, and
-only within the approved prescription.
+Every finding has an **ID**, a **location** (`path:line`) the practitioner
+actually read, a **severity** (🔴 CRITICAL · 🟠 IMPORTANT · 🟡 MODERATE ·
+🔵 MINOR) and a **trade-off** (cost · risk · benefit). The shared contract is
+in [`core/clinic-principles.md`](core/clinic-principles.md).
 
 ---
 
-## 🧭 The care pathway
+## 🩺 Commands
+
+| Command | What happens |
+|---|---|
+| `/checkup [path… \| branch:<name>]` | The Therapist and the Diagnostician examine the scope in parallel, read-only; one clinical report with a proposed prescription. |
+| `/security-checkup [path… \| branch:<name>]` | The Immunologist reviews a change for reachable threats. |
+| `/intensive-care [path… \| branch:<name>]` | Checkup → Surgeon → checkup, **only** on actionable 🔴/🟠 findings, until none remain (stops on failure or lack of progress; 10-pass safety cap). Alias: `/soins-intensifs`. |
+
+The Radiologist and the Nutritionist are consulted by name ("ask the
+radiologist for this repo's zone of pain", "have the nutritionist look at
+`src/billing`"). With no argument, commands examine the current session's
+work, or the uncommitted changes.
 
 ```mermaid
 flowchart LR
-R["🩻 Radiologist<br/>(on request)"] -.-> C["🧑‍⚕️ /checkup<br/>general practitioner assessment"]
-C --> S["🩺 Surgeon<br/>operates the prescription"]
+R["🩻 Radiologist<br/>(on demand)"] -.-> C["🧑‍⚕️ /checkup<br/>Therapist + Diagnostician"]
+C -->|"operate T1, D2"| S["🩺 Surgeon"]
 N["🥗 Nutritionist<br/>(on demand)"] -.-> S
-I["🦠 Immunologist<br/>/security-checkup"] -.-> S
+I["🦠 /security-checkup<br/>Immunologist"] -.-> S
+C <-->|"/intensive-care<br/>🔴/🟠 only"| S
 ```
 
-Each expert can be consulted **individually**, on demand. The Radiologist,
-Nutritionist and Immunologist are not part of the `/checkup` protocol. The pathway is a
-suggestion, not a mandatory procedure: plan-mode agents diagnose and prescribe,
-and nothing is operated on without an approved prescription.
+---
+
+## 📦 Installation
+
+**Claude Code** — as a plugin (recommended):
+
+```bash
+claude plugin marketplace add alexandrerodenas/la-clinique-du-code
+claude plugin install la-clinique-du-code@la-clinique-du-code
+```
+
+**OpenCode**, **GitHub Copilot** (VS Code and the Copilot app), or a manual
+Claude Code install — clone this repository, then, on any OS:
+
+```bash
+node scripts/install.mjs opencode
+node scripts/install.mjs copilot --project /path/to/your/project
+node scripts/install.mjs claude
+```
+
+**GitHub Copilot CLI** (skills only): `copilot plugin install ./plugin`.
+
+Details, options (`--dry-run`, `--uninstall`) and the install-by-agent prompt:
+[**docs/installation.md**](docs/installation.md). Usage guide:
+[**docs/usage.md**](docs/usage.md).
 
 ---
 
 ## 🧩 Architecture
 
-The Clinic is organized in two layers:
-
-- `core/` contains the principles, protocols and tools independent of a harness;
-- `adapters/` contains the integrations specific to each code helper.
-
-The OpenCode, GitHub Copilot and Claude Code adapters are provided in
-`adapters/opencode/`, `adapters/copilot/` and `adapters/claude/`. They expose
-the same portable protocols, including `/checkup` and `/intensive-care`
-(alias `/soins-intensifs`), in their native formats.
-
-## 📦 Installation
-
-**Claude Code**, as a plugin (recommended):
-
-```
-claude plugin marketplace add alexandrerodenas/la-clinique-du-code
-claude plugin install la-clinique-du-code@la-clinique-du-code
+```text
+core/        the portable Clinic — the only place to edit
+  clinic-principles.md   shared contract (rules, severity, finding format)
+  protocols/             8 skills: 6 practitioners + checkup + intensive-care
+  agents/                6 practitioner personas with their access level
+  tools/                 zone-of-pain analyzer (Node, no dependency)
+plugin/      generated Claude Code / Agent Plugins package (+ hand-written commands)
+adapters/    OpenCode and Copilot integrations (agents generated, commands hand-written)
+scripts/     build.mjs (generate + --check) · install.mjs (cross-platform installer)
+tests/       structure, installer and analyzer tests — run with `npm test`
 ```
 
-See [**plugin/README.md**](plugin/README.md) for details, or
-[**adapters/claude/**](adapters/claude/) for the manual/global install
-script instead.
-
-**GitHub Copilot CLI**, for the portable Clinic skills:
-
-```
-copilot plugin install ./plugin
-```
-
-See [**docs/installation.md**](docs/installation.md) for installing the
-OpenCode and GitHub Copilot adapters and using the portable core.
-
-## 🧭 Usage
-
-See [**docs/usage.md**](docs/usage.md) for `/checkup` and
-`/intensive-care` (session, path, or branch), on-demand consultations, and
-the handoff to the Surgeon. Intensive care operates only on actionable
-🔴 CRITICAL and 🟠 IMPORTANT findings; lower-severity observations are reported
-without triggering more surgery.
+Edit `core/`, run `node scripts/build.mjs`, then `npm test`. See
+[`core/README.md`](core/README.md).
 
 ---
 

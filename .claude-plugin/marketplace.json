@@ -8,12 +8,13 @@
   "plugins": [
     {
       "name": "la-clinique-du-code",
-      "description": "Post-development code clinic: quality checkup, test diagnostics, architecture hotspots (zone of pain), security review, and surgical refactoring on an approved prescription.",
+      "description": "Post-development code clinic: checkup of code and tests, security review, architecture hotspots (zone of pain), necessity review, and surgical fixes on an approved prescription.",
       "author": {
         "name": "alexandrerodenas"
       },
       "source": "./plugin",
-      "homepage": "https://github.com/alexandrerodenas/la-clinique-du-code"
+      "homepage": "https://github.com/alexandrerodenas/la-clinique-du-code",
+      "version": "1.1.0"
     }
   ]
 }

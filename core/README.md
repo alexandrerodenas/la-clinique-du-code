@@ -1,27 +1,48 @@
-# Core portable
+# Core — the portable Clinic
 
-The `core/` folder contains the independent elements of an agent harness:
+Everything here is independent of any coding assistant. The adapters only
+translate it.
 
-- practitioner protocols in `protocols/`;
-- reusable local tools in `tools/`;
-- the operating principles of the Clinic.
+```text
+core/
+├── clinic-principles.md   the shared contract: rules, severity scale, finding format
+├── protocols/             one skill per file — the source of truth
+│   ├── checkup.md             orchestration: Therapist + Diagnostician, one report
+│   ├── intensive-care.md      orchestration: checkup ⇄ Surgeon on 🔴/🟠 only
+│   ├── code-therapist.md      🧠 code quality, architecture, spec compliance
+│   ├── test-diagnostician.md  🔬 tests
+│   ├── zone-of-pain.md        🩻 git history x-ray
+│   ├── nutritionist.md        🥗 necessity
+│   ├── immunologist.md        🦠 security
+│   └── surgeon.md             🩺 operating on a prescription
+├── agents/                one practitioner per file: persona + access level (read | run | build)
+└── tools/
+    └── zone-of-pain-analyzer.js   the Radiologist's read-only analyzer (Node ≥ 14, no dependency)
+```
 
-The `intensive-care` protocol links a checkup and the Surgeon until no
-actionable 🔴 CRITICAL or 🟠 IMPORTANT finding remains. Lower-severity findings
-are reported but do not trigger surgery. Each adapter translates this protocol
-into its own command format without changing its guardrails.
+## Editing the Clinic
 
-`core/protocols/` is the source of truth for the portable skills. Its files
-already include the skill metadata used by the adapters, so `plugin/skills/`
-can be copied exactly with `node scripts/sync-plugin-protocols.mjs`; use
-`--check` to detect drift.
+1. Edit `core/` only. Protocols carry their own skill front matter (`name`,
+   `description`); agents carry `name`, `skill`, `access` and `description`.
+2. Regenerate the derived files and run the tests:
 
-An adapter is responsible for translating these protocols into the format
-expected by a coding assistant. The OpenCode, GitHub Copilot and Claude Code
-adapters are located in `adapters/opencode/`, `adapters/copilot/` and
-`adapters/claude/`, respectively.
+   ```bash
+   node scripts/build.mjs   # plugin/skills, plugin/agents, adapters/*/agents
+   npm test                 # build --check + structure, installer and analyzer tests
+   ```
 
-The protocols do not require any particular command or delegation tool,
-nor specific permission. The orchestrator who uses them must guarantee the
-constraints of each practitioner, in particular the absence of modification during a
-diagnosis.
+`scripts/build.mjs` copies protocols verbatim into `plugin/skills/` and renders
+each agent in the native format of Claude Code, OpenCode and GitHub Copilot
+(tools and permissions derived from its access level). Generated files carry
+a header saying so; CI fails if they drift from `core/`.
+
+Commands (`/checkup`, `/intensive-care`, `/soins-intensifs`,
+`/security-checkup`) are thin, hand-written per adapter: each one loads a
+protocol and adds only the harness-specific delegation details.
+
+## Guarantees the orchestrator must keep
+
+The protocols need no particular tool or permission system, but whoever runs
+them must keep their constraints: no modification during a diagnosis, the
+Surgeon only on a prescription plus consent, intensive care only on 🔴/🟠
+findings with its stop conditions.

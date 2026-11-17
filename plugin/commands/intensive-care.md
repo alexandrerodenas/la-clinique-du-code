@@ -1,29 +1,23 @@
 ---
-description: Launches intensive care at the Code Clinic — operates on critical and important findings, then stops when none remain.
-argument-hint: [path|branch:<name>]
+description: "Code Clinic intensive care: alternates read-only checkups with Surgeon operations on actionable 🔴 CRITICAL and 🟠 IMPORTANT findings only, and stops when none remain (10-pass safety cap)."
+argument-hint: "[path… | branch:<name>]"
 ---
 
-# 🏥 Intensive care at the Code Clinic
+# 🏥 Code Clinic intensive care
 
-You coordinate the portable `intensive-care` protocol in build mode.
-Start by loading the `intensive-care` skill, then apply it without changing the code during checkups.
+Load the `intensive-care` skill and apply it in full. It relies on the
+`checkup` protocol for every pass: load that skill too.
 
-## Perimeter
+**Scope requested:** `$ARGUMENTS` (empty: the current session's work, else the uncommitted changes). Keep it identical for every pass.
 
-The requested perimeter is: `$ARGUMENTS`.
-If empty, use the work of the current session. Keep exactly this perimeter throughout the loop.
+By running this command the user consents to operations on the 🔴/🟠 findings
+of each pass, within this scope — nothing more. In Claude Code:
 
-## Mandatory protocol
+- checkups dispatch `therapist` and `diagnostician` in parallel with the
+  `Agent` (formerly `Task`) tool;
+- operations go to the `surgeon` subagent, with the prescribed findings, their
+  IDs and locations, and the note that consent comes from intensive care;
+- the surgeon never runs in parallel with a checkup.
 
-For each pass, in this strict order:
-
-1. Run a full read-only checkup, delegating `therapist` and `diagnostician` (via the `Task` tool) in parallel, as for `/checkup`.
-2. Wait for the full report. Isolate only actionable 🔴 CRITICAL or 🟠 IMPORTANT findings that require a verifiable modification.
-3. If no such finding remains, stop operating and return the final report. Report remaining 🟡 MODERATE or 🔵 MINOR findings as deferred; they do not trigger another operation or pass.
-4. If findings remain, immediately delegate only those critical and important findings to the `surgeon` (via the `Task` tool). The explicit call of this command constitutes consent for successive prescriptions within this scope; the surgeon must not treat anything outside the current prescription or operate on lower-severity findings.
-5. Wait for the surgeon's report, reread the diff and validations.
-6. If the surgeon refuses, fails, produces no modification or reports an untreatable prescription, stop the loop and report the blockage clearly. Do not display artificial success.
-7. Otherwise, restart a checkup with the same scope.
-
-Never skip the first checkup, never run the surgeon in parallel with the diagnosis, and never turn a speculative recommendation into an operation.
-The 10-pass limit is a safety cap, not a target: stop earlier as soon as no actionable 🔴/🟠 finding remains. If the cap is reached, list the unresolved critical and important findings. Provide a chronological report with the prescriptions, operations, checks, remaining findings and reason for stopping.
+Stop as soon as no actionable 🔴/🟠 finding remains, on any failure, refusal
+or lack of progress, or at pass 10. Never claim success that was not verified.

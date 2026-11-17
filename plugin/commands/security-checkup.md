@@ -1,30 +1,23 @@
 ---
-description: "Security checkup of the Code Clinic. The Immunologist examines a change for reachable threats, each finding with an attack path. Scope: working tree, path, or branch (diffs)."
-argument-hint: [path|branch:<name>]
+description: "Code Clinic security checkup: the Immunologist reviews a change for threats an attacker can actually reach, each finding with an attack path. Read-only."
+argument-hint: "[path… | branch:<name>]"
 ---
 
-# 🦠 Code Clinic Security Checkup
+# 🦠 Code Clinic security checkup
 
-You open the Clinic's immunology department. The Immunologist will examine the user's change for threats an attacker could actually reach.
+**Scope requested:** `$ARGUMENTS`
 
-**Scope of consultation:** $ARGUMENTS
-(if empty: covers the code developed in the current session, or ask the user to specify the scope)
+1. **Resolve the scope** as the `checkup` skill does: empty → the current
+   session's work, else the uncommitted changes (`git diff HEAD`); `<path>` →
+   those files; `branch:<name>` → `git diff <base>...<name>`, with the base from
+   `git symbolic-ref --short refs/remotes/origin/HEAD` (else `main`, else
+   `master`). If the branch is missing or the diff is empty, tell the user and
+   stop.
+2. **Dispatch the `immunologist` subagent** (`Agent` tool, formerly `Task`)
+   with the list of changed files, the diff command to run, and what you know
+   of the project. It cannot ask the user anything.
+3. **Return its report as is.**
 
-## Protocol
-
-1. **Preparation of the patient file** — Clearly identify the scope:
-   - **Working tree / path**: `/security-checkup` or `/security-checkup src/api` → the working tree files (new or modified)
-   - **Branch**: `/security-checkup branch:<name>` → `git diff <base>...<branch>`, with the base being the remote's default branch. The branch must be present locally; if it does not exist or the diff is empty, warn the user and stop.
-
-2. **Immunologist consultation** — Launch the `immunologist` subagent (`Task` tool, `subagent_type: immunologist`) with the scope as input. It loads the `immunologist` skill itself and applies its complete protocol.
-
-3. **Report** — Return the Immunologist's report as is.
-
-## Clinic Rules
-
-- **Never** modify code during a security checkup: you are performing diagnostics.
-- A security checkup is an invitation to act, not an obligation: the user decides on further treatment.
-
-## Surgical handoff
-
-If the user wants the findings treated, the report acts as a **prescription**: suggest entrusting it to the Surgeon (`surgeon`). Never operate without this validated prescription.
+Never modify code during a security checkup. If the user wants findings
+treated, the report is a prescription for the `surgeon`: the user approves all
+`X` findings or a subset by ID.

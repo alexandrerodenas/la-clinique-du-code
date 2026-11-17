@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "la-clinique-du-code",
-  "description": "A portable set of manual post-development code clinic skills for code quality, tests, architecture, and surgical refactoring.",
-  "version": "1.0.0",
+  "description": "A portable, manual, post-development code clinic: /checkup (code + tests), /security-checkup, on-demand x-ray and nutrition consultations, and a Surgeon that operates only on an approved prescription.",
+  "version": "1.1.0",
   "author": {
     "name": "alexandrerodenas"
   },

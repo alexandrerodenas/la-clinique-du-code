@@ -1,10 +1,10 @@
 ---
-description: French alias for the Code Clinic intensive-care command.
+description: "Alias français de /intensive-care : soins intensifs de la Clinique du Code (opère uniquement les constats 🔴/🟠, s'arrête quand il n'en reste plus)."
 agent: build
 ---
 
-Read and apply the `intensive-care` skill as for `/intensive-care`.
+French alias of `/intensive-care`. Load the `intensive-care` skill (and the
+`checkup` skill it relies on) and apply it in full, with the same guardrails,
+on the requested scope: `$ARGUMENTS`.
 
-The requested perimeter is: `$ARGUMENTS`.
-If empty, use the work from the current session and keep the same perimeter
-throughout the loop.
+Answer the user in French.

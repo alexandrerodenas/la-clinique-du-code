@@ -1,67 +1,74 @@
 ---
 name: intensive-care
-description: Portable intensive care protocol from the Code Clinic. Operates only on critical and important findings, then stops when none remain.
+description: The Code Clinic intensive care loop. Alternates read-only checkups with Surgeon operations on actionable 🔴 CRITICAL and 🟠 IMPORTANT findings only, and stops as soon as none remain, on failure, refusal or lack of progress, or at the 10-pass safety cap. Use only when the user explicitly runs /intensive-care or /soins-intensifs.
 ---
 
-# Intensive care protocol
+# Intensive care
 
-Intensive care is an explicit path initiated only by the user. It alternates
-read-only checkups with prescribed operations by the Surgeon, and stops as soon
-as no actionable critical or important finding remains.
+An explicit, opt-in loop: checkup → Surgeon → checkup, until no actionable
+🔴/🟠 finding remains. It is the only mode that chains diagnosis and surgery
+without asking in between, so its guardrails are strict.
 
-## Entry requirements
+## Entry
 
-- The mode is initiated by an explicit command from the user.
-- Use the scope provided by the user. If it is empty, use the current session's
-work.
-- Launching the command explicitly constitutes consent to operate on successive
-prescriptions within that scope. It does not authorize expanding the scope or
-treating anything outside the current prescription.
+- Started only by an explicit command from the user. Never suggest it as an
+  automatic next step and never start it yourself.
+- **Scope**: resolve it exactly as the `checkup` protocol does (empty =
+  current session's work or uncommitted changes; `<path>`; `branch:<name>`),
+  then keep it identical for every pass.
+- **Consent**: launching the command is consent to operate on the 🔴/🟠
+  findings of each pass, within that scope. It never authorizes widening the
+  scope, treating 🟡/🔵 findings, or opportunistic changes.
+- **Baseline**: record `git status --short` and the current state of the
+  project's checks before the first pass, so the final report can separate
+  the loop's changes from what was already there.
 
 ## Care loop
 
-For each pass:
+For each pass `n` (1 ≤ n ≤ 10):
 
-1. Run a **full checkup** in read-only mode with the same scope.
-2. Wait for the report and isolate actionable 🔴 CRITICAL or 🟠 IMPORTANT
-   findings that require a verifiable modification.
-3. If none remain, stop operating and return the final assessment. Report any
-   remaining 🟡 MODERATE or 🔵 MINOR findings as deferred; they do not trigger
-   another operation or pass.
-4. Send only the critical and important findings to the **Surgeon**. The
-   explicit launch of intensive care provides consent for this prescription.
-5. Wait for the Surgeon's report, reread the diff and review the validations.
-6. If the Surgeon refuses, fails, makes no modification, cannot process the
-   prescription or makes no progress, stop and report the blockage clearly.
-   Do not claim success.
-7. Otherwise, rerun a checkup with the same scope.
+1. **Checkup.** Run the `checkup` protocol, read-only, on the scope: the
+   Therapist and the Diagnostician in parallel, one merged report.
+2. **Triage.** Keep only 🔴 CRITICAL and 🟠 IMPORTANT findings that are
+   actionable: a concrete, verifiable code change within the scope. A
+   speculative, future-facing or "consider…" recommendation is not actionable.
+3. **Stop if none remain.** Report the remaining 🟡/🔵 findings as deferred;
+   they never trigger an operation or another pass.
+4. **Progress check** (from pass 2). If a finding from the previous pass's
+   prescription is reported again (same problem in the same file — IDs and
+   line numbers may change between passes), the loop is not progressing on
+   it: stop and report it as blocked. Do not re-prescribe it.
+5. **Operate.** Send exactly the actionable 🔴/🟠 findings to the `surgeon`,
+   with their IDs, locations and recommendations, and the note that consent
+   comes from intensive care. Never run the Surgeon in parallel with a
+   checkup.
+6. **Review.** Read the Surgeon's report and the diff. If it refused, failed,
+   changed nothing, or regressed a check compared with the baseline: stop and
+   report the blockage. Never claim success.
+7. **Next pass** with the same scope.
 
-The report of each pass must be kept in the final report:
-prescription received, operations carried out, checks, remaining findings and
-reason for stopping.
+At pass 10, stop regardless and list the unresolved 🔴/🟠 findings. Ten is a
+safety cap, not a target: most patients leave after one or two passes.
 
-## Guardrails
+## Final report
 
-- Never launch the Surgeon before obtaining the checkup report.
-- Do not operate on 🟡 MODERATE or 🔵 MINOR findings. A future, speculative or
-non-actionable recommendation is not a reason to pursue surgery.
-- Never expand the scope or treat an opportunistic improvement.
-- Keep the 10-pass limit as a safety cap, not as a goal. Stop earlier as soon
-as no actionable 🔴 CRITICAL or 🟠 IMPORTANT finding remains. If the cap is
-reached, list the unresolved critical and important findings.
-- A checkup remains strictly read-only; only the Surgeon can operate.
-- If a checkup or intervention fails, do not ignore the error or claim success.
-Stop and report the error and the known state.
+```text
+## 🏥 Intensive care report
 
-## Final assessment
+### Scope and baseline
+<scope> · baseline: <checks and pre-existing failures, pre-existing changes>
 
-Provide a chronological report indicating:
+### Passes
+| Pass | 🔴/🟠 prescribed | Treated | Not treated | Checks after |
+|---|---|---|---|---|
+| 1 | T1, T2, D1 | T1, D1 | T2 (reason) | tests ✅ |
+| 2 | — | — | — | — |
 
-- the perimeter;
-- the number of passes;
-- the prescription and operations of each pass;
-- validations performed;
-- the remaining findings, distinguishing actionable 🔴/🟠 items from deferred
-🟡/🔵 observations;
-- the reason for stopping: no actionable critical or important findings,
-blockage, lack of progress or the 10-pass safety cap.
+### Outcome
+Reason for stopping: no actionable 🔴/🟠 left | blocked (<what>) | no progress on <IDs> | 10-pass cap
+Remaining 🔴/🟠: <IDs and titles, or "none">
+Deferred 🟡/🔵: <IDs and titles>
+
+### Changes
+<files changed by the loop, separate from pre-existing changes>
+```
