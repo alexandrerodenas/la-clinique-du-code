@@ -69,6 +69,8 @@ Follow this order.
      function?
    - **Coupling** — does it know more than it should about others? Cycles?
    - **State & data** — inputs mutated only on purpose, invariants enforced?
+     Does every local variable get its value once, at its declaration? Apply
+     the *Mutation rules* below (`MUT-1`…`MUT-4`).
    - **Error handling** — failures visible, specific, never swallowed? Is
      every `try`/`catch` essential (see *Ceremonial try/catch* below)?
    - **Control flow** — are preconditions checked first, with an early
@@ -89,9 +91,9 @@ Follow this order.
 
 | Level | For the Therapist |
 |---|---|
-| 🔴 CRITICAL | Incorrect results in real conditions; unhandled error paths that can take the system down; circular dependencies or unbounded recursion; a performance pattern certain to fail at the expected scale (N+1 on a hot path). Security issues are flagged here and **referred to the Immunologist** for an attack path. |
-| 🟠 IMPORTANT | Works but costs the team dearly: SOLID violations in core logic, oversized functions or classes that obscure intent (including arrow code that buries the nominal path in core logic), coupling that blocks independent change, silently swallowed errors (a `catch` that returns `null` or a default), a missing abstraction that forces repetition. |
-| 🟡 MODERATE | Friction: long parameter lists, primitive obsession, feature envy, unclear naming, mixed abstraction levels, minor duplication (< 3 occurrences), late guards, useless `else`/`elif`, ceremonial `try`/`catch`. |
+| 🔴 CRITICAL | Incorrect results in real conditions, including a null, `undefined` or unassigned value that a real path can dereference (any `MUT-*` rule escalates here); unhandled error paths that can take the system down; circular dependencies or unbounded recursion; a performance pattern certain to fail at the expected scale (N+1 on a hot path). Security issues are flagged here and **referred to the Immunologist** for an attack path. |
+| 🟠 IMPORTANT | Works but costs the team dearly: a local variable declared without a value and filled in branches (`MUT-1`), a duplicate declaration left by a refactoring (`MUT-3`), SOLID violations in core logic, oversized functions or classes that obscure intent (including arrow code that buries the nominal path in core logic), coupling that blocks independent change, silently swallowed errors (a `catch` that returns `null` or a default), a missing abstraction that forces repetition. |
+| 🟡 MODERATE | Friction: a local reassigned after its declaration (`MUT-2`), long parameter lists, primitive obsession, feature envy, unclear naming, mixed abstraction levels, minor duplication (< 3 occurrences), late guards, useless `else`/`elif`, ceremonial `try`/`catch`. |
 | 🔵 MINOR | Style, nitpicks, context-dependent preferences. Never worth a refactoring on their own. |
 
 ## Trade-off heuristics
@@ -107,8 +109,8 @@ Follow this order.
   complexity, and the team can maintain it.
 - Smell → refactoring mappings are hypotheses to confirm in context, never
   automatic prescriptions.
-- Control-flow smells (late guards, useless `else`, ceremonial `try`/`catch`)
-  repeat: report them as **one finding per file or theme** listing the
+- Control-flow and mutation smells (late guards, useless `else`, ceremonial
+  `try`/`catch`, `MUT-*`) repeat: report them as **one finding per file or theme** listing the
   locations, not one finding per occurrence.
 
 ## House smells
@@ -152,6 +154,85 @@ code produces often:
   what it catches, a broad catch "just in case", or the same error wrapped at
   every layer. A catch that hides the failure (returns `null`, an empty value
   or a default nobody asked for) is a swallowed error, not ceremony.
+
+## Mutation rules
+
+A variable that receives its value in several places has several states, and
+one of them is "not set yet". That state is where null pointer exceptions,
+`undefined` reads and half-initialized objects come from. The reader also has
+to replay every branch to know what the variable holds at the line they are
+reading. Each local gets **one value, at its declaration**; when that value
+depends on a condition, the condition goes *inside* the expression that
+produces it, not around assignments.
+
+These rules apply to every language. In a finding, cite the rule ID in the
+title (`T2 🟠 IMPORTANT — MUT-1 conditional assignment of tempFile`) and give
+the expected fix below. Mention the NPE risk explicitly when a path can reach
+the variable while it is still null, `undefined` or unassigned.
+
+**MUT-1 · Conditional mutation** — 🟠 IMPORTANT (🔴 when a real path can use
+the variable before it is set). A local declared without a value, or with a
+placeholder (`null`, `undefined`, `None`, `""`, `0`, `lateinit`), then
+assigned inside `if`/`else if`/`else`, `switch` or `try` branches.
+
+```java
+File tempFile;                          // ← no value: one state per branch
+String originalFilename;
+if (file != null) {
+    originalFilename = file.getOriginalFilename();
+    tempFile = converter.toTempFile(file);
+} else if (imageBase64 != null) {
+    originalFilename = fileName;
+    tempFile = converter.toTempFileFromBase64(fileName, imageBase64);
+} else {
+    throw new IllegalArgumentException("Either file or imageBase64 must be provided.");
+}
+```
+
+*Expected fix*, in order of preference: (1) an expression that yields the
+value — ternary, `switch`/`match` expression, `if` expression where the
+language has one; (2) an extracted method that **returns** the value (a small
+record or pair when several values travel together, e.g.
+`final Upload upload = resolveUpload(file, imageBase64, fileName);`), with
+invalid input rejected by a guard clause at its entry; (3) at the very least a
+`final`/`const`/`val` variable, so the compiler proves it is assigned exactly
+once. Java's definite-assignment check does not make the pattern acceptable: it
+still splits the value over several branches, and the same shape on a field,
+a nullable type or in JavaScript, Python or Kotlin `lateinit` compiles with the
+hole open.
+
+**MUT-2 · Reassignment** — 🟡 MODERATE (🟠 when the variable is nullable, or
+reassigned far from its declaration or in a branch). A variable that receives
+a new value after its declaration: `result = …; if (x) result = …;`,
+`name = name.trim()`, a parameter overwritten. *Expected fix*: a new, named
+variable per value (`trimmedName`), an expression, or an extracted function.
+*Exceptions*: a loop counter or iterator, an accumulator in a loop whose
+language or context offers no clearer fold (`reduce`, `sum`, a stream
+collector), and a builder used as a builder. Say why the exception applies;
+"it was simpler" is not one.
+
+**MUT-3 · Duplicate declaration after a refactoring** — 🟠 IMPORTANT (🔴 when
+the leftover dereferences a value the new code made optional). The old
+declaration or computation survives next to the new one: the same name
+declared twice (shadowing in an inner scope, `var` redeclared in JavaScript,
+a Python name rebound to an older formula), or the old line still computing
+the same thing from the old source, e.g. `File tempFile = converter.toTempFile(file);`
+left after `tempFile` was rebuilt from `file` *or* `imageBase64`. Two sources
+of truth, and the old one usually assumes an input that is now nullable (here
+`file`, which became `required = false`): a straight path to an NPE.
+*Expected fix*: delete the leftover, keep the single declaration, and check
+every remaining use (logs included: `file.getOriginalFilename()` in a log line
+is enough to crash) against the new nullability.
+
+**MUT-4 · Throwing `else` as the last branch** — the *Late guards* smell
+above, seen from the data side: a final `else` whose only job is to `throw`
+is what lets a `MUT-1` variable look "always assigned". When both occur on the
+same variable, report **one finding** (`MUT-1` + late guard), whose fix is the
+guard clause first, then a single assignment. Do not open a second finding.
+
+When the code is a language construct that is mutation by design (a loop
+variable, a `StringBuilder`, an explicit state machine, a performance-critical
+buffer in embedded code), say so and do not report it.
 
 ## Boundaries
 

@@ -11,6 +11,20 @@
   (Copilot) by hand.
 
 ### Protocols
+- Code Therapist: new *Mutation rules*, cited by ID in findings, each with its
+  expected fix and the null pointer risk it carries — `MUT-1` local declared
+  without a value then assigned in branches (🟠), `MUT-2` reassignment after
+  declaration, loops and justified accumulators excepted (🟡, 🟠 when
+  nullable or in a branch), `MUT-3` duplicate declaration or computation left
+  by a refactoring (🟠), `MUT-4` throwing final `else`, merged with *Late
+  guards* into a single finding. Any `MUT-*` escalates to 🔴 when a real path
+  can dereference the unset value.
+- Nutritionist: refactoring leftovers and dead stores join the *Dead code*
+  lens, reported under `MUT-3` (🔴 when the leftover reads an input that
+  became optional).
+- Test Diagnostician: the absent-input path of a variable assigned in
+  branches needs its own test; new *Mutation in the test* check (a reassigned
+  `result` means two behaviors in one test).
 - Code Therapist: new *Control flow* lens and three house smells generated
   code produces often — late guards (a final `else` that only throws),
   useless `else`/`elif` after `return`/`throw`, and ceremonial `try`/`catch`

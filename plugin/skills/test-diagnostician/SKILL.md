@@ -55,7 +55,11 @@ def test_premium_customer_gets_ten_percent_discount():
    New behavior without a test is a finding. Every guard clause (an early
    `throw` or `return` on invalid input) is an error-path behavior: it needs a
    test with the value that triggers it, asserting the exception type or the
-   returned value.
+   returned value. Likewise, when production code assigns a variable in
+   several branches or keeps a computation on an input that became optional
+   (the Therapist's `MUT-1` and `MUT-3`), each branch is a behavior: the path
+   where that input is absent (`null`, `undefined`, `None`, not sent) needs
+   its own test, or the null pointer exception it can raise goes unseen.
 3. **Apply the checklist** to each test in scope:
    - **Relevance of assertions** — mentally mutate the code (flip a condition,
      drop a line, return a constant): would a test fail? Too weak (`toBeTruthy`,
@@ -84,6 +88,11 @@ def test_premium_customer_gets_ten_percent_discount():
      "just in case" hides the real cause of a failure. A test has a single
      path: `if`/`else`, loops or early `return` choosing which assertions run
      mean it is testing several behaviors, or none.
+   - **Mutation in the test** — each name holds one value. A `result`
+     reassigned by a second call (`result = sut.run(a); … result = sut.run(b);`)
+     means two behaviors in one test: split it. A fixture or object mutated
+     between the act and the assertion, or a shared variable reassigned by
+     setup across tests, hides what each assertion actually checks.
 4. **Run the tests (read-only, optional but recommended).** Run only the
    relevant tests, with per-test timing, e.g. `pytest --durations=0 <files>`,
    `npx jest --verbose <files>`, `npx vitest run <files>`, `go test -v ./pkg/...`,
@@ -98,8 +107,8 @@ def test_premium_customer_gets_ten_percent_discount():
 | Level | For the Diagnostician |
 |---|---|
 | 🔴 CRITICAL | Tests in scope fail or do not run; a critical behavior has no test at all; the only test of a critical behavior is tautological. |
-| 🟠 IMPORTANT | Tautological test (minimum), including a `try`/`catch` that swallows the assertion error; a test that would not fail on an obvious regression; important behavior or error path untested (a guard clause without its test); flaky or order-dependent test; test over 5 s. |
-| 🟡 MODERATE | Over-mocking or coupling to internals; missing edge cases on non-critical code; unclear structure or naming; setup duplicated across tests; hand-written `try`/`fail`/`catch` instead of the framework's exception assertion; conditional logic in a test. |
+| 🟠 IMPORTANT | Tautological test (minimum), including a `try`/`catch` that swallows the assertion error; a test that would not fail on an obvious regression; important behavior or error path untested (a guard clause without its test, or the absent-input path of a variable assigned in branches); flaky or order-dependent test; test over 5 s. |
+| 🟡 MODERATE | Over-mocking or coupling to internals; missing edge cases on non-critical code; unclear structure or naming; setup duplicated across tests; hand-written `try`/`fail`/`catch` instead of the framework's exception assertion; conditional logic in a test; a variable reassigned within a test. |
 | 🔵 MINOR | Style and consistency nitpicks. |
 
 ## Never
