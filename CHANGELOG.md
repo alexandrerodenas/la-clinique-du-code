@@ -10,6 +10,20 @@
   (Claude Code, OpenCode) or `.github/prompts/soins-intensifs.prompt.md`
   (Copilot) by hand.
 
+### Protocols
+- Code Therapist: new *Control flow* lens and three house smells generated
+  code produces often — late guards (a final `else` that only throws),
+  useless `else`/`elif` after `return`/`throw`, and ceremonial `try`/`catch`
+  (a catch that neither recovers, translates at a boundary nor releases a
+  resource). 🟡 by default, reported as one finding per file or theme.
+- Nutritionist: new *Defensive overdose* lens — superfluous `try`/`catch` and
+  checks for states that cannot happen (🟡, 🟠 when the catch also hides the
+  failure or the wrapping spans a whole layer).
+- Test Diagnostician: every guard clause needs its error-path test; new
+  *Exceptions and control flow* check — framework exception assertions instead
+  of hand-written `try`/`fail`/`catch`, a `try`/`catch` that swallows the
+  assertion error is tautological (🟠), no conditional logic in a test.
+
 ## 1.1.0
 
 ### Architecture

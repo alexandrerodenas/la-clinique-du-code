@@ -69,7 +69,11 @@ Follow this order.
      function?
    - **Coupling** — does it know more than it should about others? Cycles?
    - **State & data** — inputs mutated only on purpose, invariants enforced?
-   - **Error handling** — failures visible, specific, never swallowed?
+   - **Error handling** — failures visible, specific, never swallowed? Is
+     every `try`/`catch` essential (see *Ceremonial try/catch* below)?
+   - **Control flow** — are preconditions checked first, with an early
+     `throw`/`return`, so the nominal path reads unindented to the end? Any
+     `else`/`elif` that adds nothing after a branch that already exits?
    - **Testability** — can the important logic be tested in isolation?
    - **Scalability** — does it survive 10× the data or traffic it will see?
    - **Abstraction hygiene** — is each abstraction justified by a real need?
@@ -86,8 +90,8 @@ Follow this order.
 | Level | For the Therapist |
 |---|---|
 | 🔴 CRITICAL | Incorrect results in real conditions; unhandled error paths that can take the system down; circular dependencies or unbounded recursion; a performance pattern certain to fail at the expected scale (N+1 on a hot path). Security issues are flagged here and **referred to the Immunologist** for an attack path. |
-| 🟠 IMPORTANT | Works but costs the team dearly: SOLID violations in core logic, oversized functions or classes that obscure intent, coupling that blocks independent change, silently swallowed errors, a missing abstraction that forces repetition. |
-| 🟡 MODERATE | Friction: long parameter lists, primitive obsession, feature envy, unclear naming, mixed abstraction levels, minor duplication (< 3 occurrences). |
+| 🟠 IMPORTANT | Works but costs the team dearly: SOLID violations in core logic, oversized functions or classes that obscure intent (including arrow code that buries the nominal path in core logic), coupling that blocks independent change, silently swallowed errors (a `catch` that returns `null` or a default), a missing abstraction that forces repetition. |
+| 🟡 MODERATE | Friction: long parameter lists, primitive obsession, feature envy, unclear naming, mixed abstraction levels, minor duplication (< 3 occurrences), late guards, useless `else`/`elif`, ceremonial `try`/`catch`. |
 | 🔵 MINOR | Style, nitpicks, context-dependent preferences. Never worth a refactoring on their own. |
 
 ## Trade-off heuristics
@@ -103,6 +107,9 @@ Follow this order.
   complexity, and the team can maintain it.
 - Smell → refactoring mappings are hypotheses to confirm in context, never
   automatic prescriptions.
+- Control-flow smells (late guards, useless `else`, ceremonial `try`/`catch`)
+  repeat: report them as **one finding per file or theme** listing the
+  locations, not one finding per occurrence.
 
 ## House smells
 
@@ -124,6 +131,27 @@ code produces often:
 - **Pattern for the pattern** — classes named after a pattern with no problem
   to solve; single-implementation, single-consumer interfaces; factories for
   trivial construction.
+- **Late guards** — a precondition checked at the end of the function instead
+  of at its entry: two nominal branches, then a final `elif`/`else` whose only
+  job is to `throw`. Invalid input should be rejected first, with a guard
+  clause, so the reader no longer has to carry it in mind. Same family: arrow
+  code (nested `if`s that each wrap the rest of the function) where inverted
+  conditions with early exits would flatten it.
+- **Useless else** — `else`/`elif` after a branch that ends in `return`,
+  `throw`, `break` or `continue`. Execution already falls through to the next
+  line; the `else` only adds a level of indentation and a branch to read. Not
+  a smell where the language needs it: `if`/`else` used as an expression
+  (Kotlin, Rust, Scala, ternaries), exhaustive `switch`/`match` expressions,
+  or two symmetric branches that each produce a value.
+- **Ceremonial try/catch** — a `try`/`catch` that is not essential. A catch is
+  essential when it **recovers** (retry, fallback, default the domain
+  defines), **translates** the error at a boundary into a type the caller
+  understands, or **releases** a resource the language cannot release for you.
+  Anything else is ceremony: catch-and-rethrow unchanged, catch-log-rethrow
+  when a handler higher up already logs, a `try` around code that cannot throw
+  what it catches, a broad catch "just in case", or the same error wrapped at
+  every layer. A catch that hides the failure (returns `null`, an empty value
+  or a default nobody asked for) is a swallowed error, not ceremony.
 
 ## Boundaries
 
