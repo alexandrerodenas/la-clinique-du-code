@@ -60,7 +60,6 @@ const send = async (label, prompt, scope) => {
 const run = {
     checkup: (scope) => send("Checkup", PROTOCOLS.checkup(scope), scope),
     "intensive-care": (scope) => send("Soins intensifs", PROTOCOLS.intensiveCare(scope), scope),
-    "soins-intensifs": (scope) => send("Soins intensifs", PROTOCOLS.intensiveCare(scope), scope),
     "security-checkup": (scope) => send("Checkup de securite", PROTOCOLS.securityCheckup(scope), scope),
 };
 
@@ -100,7 +99,6 @@ const session = await joinSession({
         command("checkup", "Checkup diagnostique : therapist et diagnostician en parallele, sans modifier le depot."),
         command("security-checkup", "Checkup de securite : l'immunologist examine un changement, sans modifier le depot."),
         command("intensive-care", "Soins intensifs : opere uniquement les constats CRITICAL et IMPORTANT, s'arrete quand il n'en reste plus."),
-        command("soins-intensifs", "Alias francais de /intensive-care."),
     ],
     tools: [
         tool("clinic_checkup", "Lance le checkup diagnostique de La Clinique du Code, sans modifier le depot.", "checkup"),
@@ -110,7 +108,7 @@ const session = await joinSession({
     hooks: {
         // Compatibility bridge for CLI versions that do not expose native commands yet.
         onUserPromptSubmitted: async (input) => {
-            const match = input.prompt.match(/^\/(checkup|security-checkup|intensive-care|soins-intensifs)(?:\s+([\s\S]*))?$/i);
+            const match = input.prompt.match(/^\/(checkup|security-checkup|intensive-care)(?:\s+([\s\S]*))?$/i);
             if (!match) return;
             const name = match[1].toLowerCase();
             const scope = match[2]?.trim();
@@ -122,7 +120,7 @@ const session = await joinSession({
         },
         onSessionStart: async () => {
             await session.log(
-                "La Clinique du Code est disponible : /checkup, /security-checkup, /intensive-care (/soins-intensifs). Praticiens : therapist, diagnostician, radiologist, nutritionist, immunologist, surgeon."
+                "La Clinique du Code est disponible : /checkup, /security-checkup, /intensive-care. Praticiens : therapist, diagnostician, radiologist, nutritionist, immunologist, surgeon."
             );
         },
     },

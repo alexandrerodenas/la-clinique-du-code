@@ -7,7 +7,7 @@ and for **GitHub Copilot CLI** (`plugin.json`, Agent Plugins 1.0 format — skil
 |---|---|---|
 | `skills/` | the 8 protocols — `checkup`, `intensive-care`, `code-therapist`, `test-diagnostician`, `zone-of-pain` (+ its analyzer), `nutritionist`, `immunologist`, `surgeon` | **generated** from `core/protocols/` |
 | `agents/` | the 6 practitioners as Claude Code subagents, each with its skill preloaded | **generated** from `core/agents/` |
-| `commands/` | `/checkup`, `/security-checkup`, `/intensive-care`, `/soins-intensifs` | hand-written, thin |
+| `commands/` | `/checkup`, `/security-checkup`, `/intensive-care` | hand-written, thin |
 
 Do not edit generated files: edit `core/`, then run `node scripts/build.mjs`
 from the repository root (`npm test` checks for drift).

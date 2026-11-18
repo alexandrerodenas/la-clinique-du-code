@@ -27,7 +27,7 @@ sévérité (🔴 🟠 🟡 🔵) et un compromis coût / risque / bénéfice.
   Diagnosticien en parallèle, un rapport, une ordonnance proposée.
 - `/security-checkup [chemin | branch:<nom>]` — l'Immunologiste examine un
   changement.
-- `/intensive-care` (alias `/soins-intensifs`) — boucle explicite checkup →
+- `/intensive-care` — boucle explicite checkup →
   Chirurgien → checkup, uniquement sur les constats 🔴/🟠 ; s'arrête dès qu'il
   n'en reste plus, en cas d'échec ou d'absence de progrès, ou à 10 passes.
 - Le Radiologue et le Nutritionniste se consultent à la demande, par leur nom.

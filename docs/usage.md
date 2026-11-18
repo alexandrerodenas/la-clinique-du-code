@@ -65,11 +65,11 @@ reports only threats an attacker can reach. Every finding has an
 `attack: who → entry point → what they get` line; nothing reachable means
 `✅ clean`, and that is a good outcome.
 
-## `/intensive-care` — the loop (alias `/soins-intensifs`)
+## `/intensive-care` — the loop
 
 ```bash
 /intensive-care src/billing
-/soins-intensifs branch:feature/invoices
+/intensive-care branch:feature/invoices
 ```
 
 The only mode that chains diagnosis and surgery without asking in between,
