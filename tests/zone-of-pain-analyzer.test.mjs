@@ -47,6 +47,9 @@ test("source files exclude tests, vendored, generated and declaration files", ()
   assert.equal(isSourceFile("node_modules/x/index.js"), false);
   assert.equal(isSourceFile("vendor/lib.go"), false);
   assert.equal(isSourceFile("README.md"), false);
+  assert.equal(isSourceFile("scripts/ball.gd"), true);
+  assert.equal(isSourceFile("addons/gut/gut.gd"), false);
+  assert.equal(isSourceFile("tests/test_ball.gd"), false);
 });
 
 test("imports are extracted per language", () => {
@@ -64,6 +67,9 @@ test("imports are extracted per language", () => {
 
   assert.deepEqual(extractImports("import com.acme.billing.Invoice;", "jvm").map((i) => i.spec), ["com.acme.billing.Invoice"]);
   assert.deepEqual(extractImports("use crate::billing::invoice::Invoice;", "rust").map((i) => i.spec), ["crate::billing::invoice::Invoice"]);
+
+  const gd = extractImports('# preload("res://no.gd")\nconst A = preload("res://scripts/a.gd")\nvar b = load("res://scripts/b.gd")\nextends "res://scripts/base.gd"', "gdscript").map((i) => i.spec);
+  assert.deepEqual(gd, ["scripts/a.gd", "scripts/b.gd", "scripts/base.gd"]);
 });
 
 test("argument parsing validates options", () => {

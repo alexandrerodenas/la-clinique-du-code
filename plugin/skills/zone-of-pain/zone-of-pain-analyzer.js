@@ -28,13 +28,14 @@ const VERSION = "4.0.0";
 const SOURCE_EXT = new Set([
   ".java", ".kt", ".kts", ".scala",
   ".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".mts", ".cts", ".vue", ".svelte",
-  ".py", ".rb", ".php", ".go", ".rs", ".cs",
+  ".py", ".rb", ".php", ".go", ".rs", ".cs", ".gd",
 ]);
 
 const EXCLUDE_DIRS = new Set([
   "node_modules", "vendor", "target", "build", "dist", "out", "coverage",
   ".git", ".idea", ".vscode", "__pycache__", ".next", ".nuxt", ".venv", "venv",
   "generated", "__generated__", "migrations",
+  ".godot", "addons", // Godot: import cache and third-party plugins (GUT...)
 ]);
 
 const TEST_DIRS = new Set(["test", "tests", "__tests__", "spec", "specs", "testing", "e2e"]);
@@ -96,6 +97,7 @@ function langForFile(filePath) {
   if (ext === ".rs") return "rust";
   if (ext === ".cs") return "csharp";
   if (ext === ".php") return "php";
+  if (ext === ".gd") return "gdscript";
   return "jvm"; // java, kotlin, scala
 }
 
@@ -114,7 +116,7 @@ function extractImports(content, lang) {
 
   for (const rawLine of lines) {
     const line = rawLine.trim();
-    if (!line || line.startsWith("//") || line.startsWith("#!")) continue;
+    if (!line || line.startsWith("//") || line.startsWith("#!") || (lang === "gdscript" && line.startsWith("#"))) continue;
     let m;
 
     if (lang === "js") {
@@ -149,6 +151,11 @@ function extractImports(content, lang) {
       else if ((m = line.match(/^(?:pub(?:\([\w:]+\))?\s+)?mod\s+(\w+)\s*;/))) add("self::" + m[1], true);
     } else if (lang === "csharp") {
       if ((m = line.match(/^(?:global\s+)?using\s+(?:static\s+)?([A-Za-z_][\w.]*)\s*;/))) add(m[1], false, "package");
+    } else if (lang === "gdscript") {
+      // preload("res://a/b.gd"), load("res://a/b.gd"), extends "res://a/b.gd".
+      // Dependencies through `class_name` are added by analyze() (classRefs).
+      const resRe = /\b(?:preload|load|extends)\s*\(?\s*"res:\/\/([^"]+)"/g;
+      while ((m = resRe.exec(line))) add(m[1], false);
     } else if (lang === "php") {
       if ((m = line.match(/^use\s+(?:function\s+|const\s+)?([\w\\]+)/))) add(m[1].replace(/\\/g, "/"), false);
       else if ((m = line.match(/^(?:require|include)(?:_once)?\s*\(?\s*__DIR__\s*\.\s*["']([^"']+)["']/))) add("." + m[1], true);
@@ -248,7 +255,7 @@ function specToPaths(imp, fromFile, lang) {
 
   // Non-relative: module paths, packages, namespaces, aliases (@/x, ~/x).
   const cleaned = spec.replace(/^[@~]\//, "").replace(/::/g, "/");
-  const slashed = lang === "js" || lang === "go" || lang === "ruby" || lang === "php" ? cleaned : cleaned.replace(/\./g, "/");
+  const slashed = lang === "js" || lang === "go" || lang === "ruby" || lang === "php" || lang === "gdscript" ? cleaned : cleaned.replace(/\./g, "/");
   const parts = stripKnownExt(slashed).split("/").filter(Boolean);
   const suffix = [];
   // Full spec first, then without leading segments (namespace roots rarely
@@ -294,6 +301,41 @@ function resolveImport(imp, fromFile, lang, index) {
     }
   }
   return [];
+}
+
+// ──────────────────────────────────────────────────────────────
+// GDScript: dependencies through `class_name`
+// ──────────────────────────────────────────────────────────────
+
+/** Maps each `class_name Foo` declared in the project to its file. */
+function gdscriptClassOwners(root, files) {
+  const owners = new Map();
+  for (const file of files) {
+    if (!file.endsWith(".gd")) continue;
+    let content;
+    try {
+      content = fs.readFileSync(path.join(root, file), "utf8");
+    } catch (error) {
+      continue;
+    }
+    const m = content.match(/^class_name\s+(\w+)/m);
+    if (m) owners.set(m[1], file);
+  }
+  return owners;
+}
+
+/** Files whose `class_name` is referenced as a word in `content` (comments and strings ignored). */
+function classRefs(content, owners) {
+  if (owners.size === 0) return [];
+  const code = content
+    .split(/\r?\n/)
+    .filter((l) => !l.trim().startsWith("#"))
+    .join("\n")
+    .replace(/"(?:[^"\\\n]|\\.)*"/g, '""');
+  const words = new Set(code.match(/\b[A-Za-z_]\w*\b/g) || []);
+  const targets = [];
+  for (const [name, file] of owners) if (words.has(name)) targets.push(file);
+  return targets;
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -366,6 +408,7 @@ function analyze(options) {
 
   // 2. Coupling — number of distinct files importing each file
   const index = buildIndex(sourceFiles);
+  const classOwners = gdscriptClassOwners(root, sourceFiles);
   const importers = new Map(sourceFiles.map((f) => [f, new Set()]));
   let importCount = 0;
   let resolvedCount = 0;
@@ -377,6 +420,14 @@ function analyze(options) {
       continue;
     }
     const lang = langForFile(file);
+    if (lang === "gdscript") {
+      for (const target of classRefs(content, classOwners)) {
+        if (target === file) continue;
+        importCount++;
+        resolvedCount++;
+        importers.get(target).add(file);
+      }
+    }
     for (const imp of extractImports(content, lang)) {
       importCount++;
       const targets = resolveImport(imp, file, lang, index).filter((t) => t !== file);
