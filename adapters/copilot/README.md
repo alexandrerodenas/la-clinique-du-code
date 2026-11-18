@@ -12,7 +12,7 @@ node scripts/install.mjs copilot --project /path/to/project   # --dry-run, --uni
 | `skills/<name>/SKILL.md` (+ analyzer) | `plugin/skills/` (generated from `core/protocols/`) |
 | `agents/<name>.agent.md` — 6 practitioners | `agents/` (generated from `core/agents/` — do not edit) |
 | `agents/checkup.agent.md`, `intensive-care.agent.md`, `security-checkup.agent.md` — coordinators | `agents/` (hand-written) |
-| `prompts/*.prompt.md` — `/checkup`, `/security-checkup`, `/intensive-care`, `/soins-intensifs` | `prompts/` |
+| `prompts/*.prompt.md` — `/checkup`, `/security-checkup`, `/intensive-care` | `prompts/` |
 | `extensions/la-clinique-du-code/extension.mjs` | `extensions/` |
 | a Clinic block in `copilot-instructions.md` (between markers; your content is kept) | `templates/copilot-instructions.md` |
 
