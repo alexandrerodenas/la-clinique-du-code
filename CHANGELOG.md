@@ -19,6 +19,16 @@
   by a refactoring (🟠), `MUT-4` throwing final `else`, merged with *Late
   guards* into a single finding. Any `MUT-*` escalates to 🔴 when a real path
   can dereference the unset value.
+- Code Therapist: new *Nullability rules* — `NUL-1` nullable value carried
+  across functions or layers while its type does not say so, to be resolved
+  once at the boundary with `Optional`, a checked nullable type or a domain
+  default (🟠, 🟡 when local); `NUL-2` booleans or `if` combinations derived
+  from null checks, to be replaced by one validation point that returns a
+  typed value (🟠); `NUL-3` primitive carrying a domain rule, to become a
+  value object (🟡, 🟠 when repeated or nullable).
+- Nutritionist: the same null check repeated at every layer is defensive
+  overdose (cites `NUL-1`/`NUL-2`). Test Diagnostician: one test per invalid
+  combination of optional inputs.
 - Nutritionist: refactoring leftovers and dead stores join the *Dead code*
   lens, reported under `MUT-3` (🔴 when the leftover reads an input that
   became optional).

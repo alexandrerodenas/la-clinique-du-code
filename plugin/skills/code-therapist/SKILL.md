@@ -70,7 +70,8 @@ Follow this order.
    - **Coupling** — does it know more than it should about others? Cycles?
    - **State & data** — inputs mutated only on purpose, invariants enforced?
      Does every local variable get its value once, at its declaration? Apply
-     the *Mutation rules* below (`MUT-1`…`MUT-4`).
+     the *Mutation rules* below (`MUT-1`…`MUT-4`). Can a value be absent,
+     and does its type say so? Apply the *Nullability rules* (`NUL-1`…`NUL-3`).
    - **Error handling** — failures visible, specific, never swallowed? Is
      every `try`/`catch` essential (see *Ceremonial try/catch* below)?
    - **Control flow** — are preconditions checked first, with an early
@@ -91,9 +92,9 @@ Follow this order.
 
 | Level | For the Therapist |
 |---|---|
-| 🔴 CRITICAL | Incorrect results in real conditions, including a null, `undefined` or unassigned value that a real path can dereference (any `MUT-*` rule escalates here); unhandled error paths that can take the system down; circular dependencies or unbounded recursion; a performance pattern certain to fail at the expected scale (N+1 on a hot path). Security issues are flagged here and **referred to the Immunologist** for an attack path. |
-| 🟠 IMPORTANT | Works but costs the team dearly: a local variable declared without a value and filled in branches (`MUT-1`), a duplicate declaration left by a refactoring (`MUT-3`), SOLID violations in core logic, oversized functions or classes that obscure intent (including arrow code that buries the nominal path in core logic), coupling that blocks independent change, silently swallowed errors (a `catch` that returns `null` or a default), a missing abstraction that forces repetition. |
-| 🟡 MODERATE | Friction: a local reassigned after its declaration (`MUT-2`), long parameter lists, primitive obsession, feature envy, unclear naming, mixed abstraction levels, minor duplication (< 3 occurrences), late guards, useless `else`/`elif`, ceremonial `try`/`catch`. |
+| 🔴 CRITICAL | Incorrect results in real conditions, including a null, `undefined` or unassigned value that a real path can dereference (any `MUT-*` or `NUL-*` rule escalates here); unhandled error paths that can take the system down; circular dependencies or unbounded recursion; a performance pattern certain to fail at the expected scale (N+1 on a hot path). Security issues are flagged here and **referred to the Immunologist** for an attack path. |
+| 🟠 IMPORTANT | Works but costs the team dearly: a local variable declared without a value and filled in branches (`MUT-1`), a duplicate declaration left by a refactoring (`MUT-3`), a nullable value carried across functions or layers without a type that says so (`NUL-1`), flags or scattered null checks standing in for a typed state (`NUL-2`), SOLID violations in core logic, oversized functions or classes that obscure intent (including arrow code that buries the nominal path in core logic), coupling that blocks independent change, silently swallowed errors (a `catch` that returns `null` or a default), a missing abstraction that forces repetition. |
+| 🟡 MODERATE | Friction: a local reassigned after its declaration (`MUT-2`), long parameter lists, primitive obsession (`NUL-3`), feature envy, unclear naming, mixed abstraction levels, minor duplication (< 3 occurrences), late guards, useless `else`/`elif`, ceremonial `try`/`catch`. |
 | 🔵 MINOR | Style, nitpicks, context-dependent preferences. Never worth a refactoring on their own. |
 
 ## Trade-off heuristics
@@ -110,7 +111,7 @@ Follow this order.
 - Smell → refactoring mappings are hypotheses to confirm in context, never
   automatic prescriptions.
 - Control-flow and mutation smells (late guards, useless `else`, ceremonial
-  `try`/`catch`, `MUT-*`) repeat: report them as **one finding per file or theme** listing the
+  `try`/`catch`, `MUT-*`, `NUL-*`) repeat: report them as **one finding per file or theme** listing the
   locations, not one finding per occurrence.
 
 ## House smells
@@ -233,6 +234,62 @@ guard clause first, then a single assignment. Do not open a second finding.
 When the code is a language construct that is mutation by design (a loop
 variable, a `StringBuilder`, an explicit state machine, a performance-critical
 buffer in embedded code), say so and do not report it.
+
+## Nullability rules
+
+`null` is a value every type silently accepts, so the type no longer says
+whether the value is there. Every reader then re-checks it, each in their own
+way (`!= null`, `isBlank()`, `isEmpty()`), and the first one who forgets
+raises the NPE. Languages give a way to say "maybe absent" in the type —
+`Optional<T>` in Java, `T?` in Kotlin and C#, `Option<T>` in Rust and Scala,
+`T | undefined` under strict TypeScript, `Optional[T]` checked by mypy or
+pyright. Use it at the boundary, then hand the domain values that are present.
+Cite the rule ID in the title, as for `MUT-*`.
+
+**NUL-1 · Nullable carried without its type** — 🟠 IMPORTANT when the value
+crosses a function, field or layer (🔴 when a real path dereferences it);
+🟡 when it stays in one short function. A parameter, field or return value
+that can be `null`, `None` or `undefined` while its type does not say so:
+`required = false` request parameters declared as plain `String`, a getter
+that returns `null` for "not found", a nullable field read in several
+methods. *Expected fix*: make absence explicit where it enters — an
+`Optional<T>` (Java: for return values and boundary parameters such as
+`@RequestParam Optional<String>`, not as a field or a domain method
+parameter), a nullable type checked by the compiler, or a default the domain
+defines — and resolve it **once**, so that what flows inward is non-null.
+Not a finding where the language or its configured checker already tracks
+nullness (Kotlin, strict TypeScript, C# nullable context, annotated Java
+with NullAway or the Checker Framework) and the code respects it.
+
+**NUL-2 · Flags derived from null** — 🟠 IMPORTANT. Booleans computed from
+null checks (`hasBase64Image = imageBase64 != null && !imageBase64.isBlank()`),
+or several `if`s that test combinations of nullable inputs, standing in for a
+state the code never names. With *n* optional inputs there are 2ⁿ
+combinations to reject by hand, and the checks drift: one tests `isEmpty()`,
+the next only `== null`, and a case slips between them.
+
+```java
+boolean hasBase64Image = imageBase64 != null && !imageBase64.isBlank();
+if (hasBase64Image && multipartImage != null && !multipartImage.isEmpty()) throw badRequest("Provide either file or imageBase64");
+if (!hasBase64Image && multipartImage == null) throw badRequest("file or imageBase64 is required");
+// an empty multipart with no base64 passes both checks
+```
+
+*Expected fix*: **one validation point that returns a typed value** —
+`ImageSource source = ImageSource.from(multipartImage, imageBase64, fileName);`
+where `ImageSource` is a sealed type (`Upload(file)` | `Base64(name, content)`)
+or an enum plus a record, and `from` rejects every invalid combination in one
+place with one notion of "present". Downstream code switches on the type and
+never sees a null or a flag again. This fix usually removes `MUT-1` variables
+and late guards in the same move: report them together as one finding.
+
+**NUL-3 · Primitive carrying a rule** — 🟡 MODERATE (🟠 when the same check is
+repeated in several places or the primitive is nullable). A `String`, `int` or
+`Map` that carries a domain rule — non-blank name, Base64 content, client id,
+amount in cents — re-validated by each consumer. This is *primitive obsession*
+named so it can be cited. *Expected fix*: a value object (record, `data
+class`, newtype) whose constructor or factory enforces the rule once, built at
+the boundary; consumers take the type, not the primitive.
 
 ## Boundaries
 

@@ -63,7 +63,10 @@ replaced but did not delete is dose, and is yours.
       nobody eats: catch-and-rethrow, catch-log-rethrow under a handler that
       already logs, a `try` around code that cannot throw what it catches,
       the same error wrapped at every layer. Same diet for checks of states
-      the types or the callers already exclude, and for a final `else` branch
+      the types or the callers already exclude — including the same null or
+      blank check repeated at every layer because nothing resolved the value
+      once at the boundary (cite the Therapist's `NUL-1`/`NUL-2`: the fix is a
+      single typed value, then deleting the redundant checks) — and for a final `else` branch
       that throws on a case the preceding branches make impossible. Establish
       it like any use: find what can actually throw (signatures, callees) and
       who handles it upstream before calling a catch superfluous.

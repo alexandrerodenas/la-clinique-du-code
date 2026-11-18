@@ -60,6 +60,9 @@ def test_premium_customer_gets_ten_percent_discount():
    (the Therapist's `MUT-1` and `MUT-3`), each branch is a behavior: the path
    where that input is absent (`null`, `undefined`, `None`, not sent) needs
    its own test, or the null pointer exception it can raise goes unseen.
+   A validation of several optional inputs (the Therapist's `NUL-2`) needs one
+   test per invalid combination — both present, neither, present but empty
+   or blank — since that is exactly where hand-written null checks drift.
 3. **Apply the checklist** to each test in scope:
    - **Relevance of assertions** — mentally mutate the code (flip a condition,
      drop a line, return a constant): would a test fail? Too weak (`toBeTruthy`,
