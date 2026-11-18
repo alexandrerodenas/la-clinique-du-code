@@ -23,6 +23,9 @@ relative to real uses: should this code have been written, and at this size?
 An observation about *how* code is written goes under "For the Therapist";
 do not treat it. A useless `else` after a `return` or a `throw` is form; a
 `try`/`catch` or a check that protects against nothing is dose, and is yours.
+A variable assigned in branches or reassigned (the Therapist's `MUT-1` and
+`MUT-2`) is form; a leftover declaration or computation that a refactoring
+replaced but did not delete is dose, and is yours.
 
 ## Consultation protocol
 
@@ -38,6 +41,14 @@ do not treat it. A useless `else` after a `return` or a `throw` is form; a
 3. **Detect**, applying every lens:
    1. **Dead code** — files with no incoming reference; exports, functions,
       endpoints, parameters or options never used; unreachable branches.
+      Also **refactoring leftovers**: the old declaration or computation kept
+      next to its replacement (`File tempFile = converter.toTempFile(file);`
+      left after `tempFile` is built from `file` *or* `imageBase64`), and
+      dead stores — a placeholder value (`= null`, `= ""`, `= 0`) that every
+      path overwrites before reading it. A leftover is not harmless: it
+      usually still reads the old input, which the new code may have made
+      optional, so it is a ready-made null pointer exception. Report it with
+      the Therapist's rule ID (`MUT-3`) so a checkup does not count it twice.
    2. **Speculation (YAGNI)** — genericity with a single use
       (single-implementation, single-consumer interfaces), extension points
       nobody extends, feature flags never toggled, configuration never read.
@@ -52,7 +63,10 @@ do not treat it. A useless `else` after a `return` or a `throw` is form; a
       nobody eats: catch-and-rethrow, catch-log-rethrow under a handler that
       already logs, a `try` around code that cannot throw what it catches,
       the same error wrapped at every layer. Same diet for checks of states
-      the types or the callers already exclude, and for a final `else` branch
+      the types or the callers already exclude — including the same null or
+      blank check repeated at every layer because nothing resolved the value
+      once at the boundary (cite the Therapist's `NUL-1`/`NUL-2`: the fix is a
+      single typed value, then deleting the redundant checks) — and for a final `else` branch
       that throws on a case the preceding branches make impossible. Establish
       it like any use: find what can actually throw (signatures, callees) and
       who handles it upstream before calling a catch superfluous.
@@ -80,9 +94,9 @@ do not treat it. A useless `else` after a `return` or a `throw` is form; a
 
 | Level | For the Nutritionist |
 |---|---|
-| 🔴 CRITICAL | Dead code that masquerades as live (a branch never reached that looks active, an endpoint that looks exposed but is not); two competing implementations of the same feature; a reinvented wheel on a critical path that introduces bugs. |
-| 🟠 IMPORTANT | Over-engineering that complicates core logic (single-use abstraction, unrequested genericity); a whole feature, module or endpoint maintained but unused; costly speculation (config never read, inert flags); a superfluous `catch` that also hides the failure (returns `null` or a default) or defensive wrapping repeated across a whole layer. |
-| 🟡 MODERATE | Local dead code (unused private function, import, parameter); minor duplication; slight overdose; a superfluous `try`/`catch` or defensive check (group the occurrences of a file into one finding). |
+| 🔴 CRITICAL | Dead code that masquerades as live (a branch never reached that looks active, an endpoint that looks exposed but is not); two competing implementations of the same feature, including a refactoring leftover that dereferences an input the new code made optional; a reinvented wheel on a critical path that introduces bugs. |
+| 🟠 IMPORTANT | A refactoring leftover that still computes a value already computed by its replacement; over-engineering that complicates core logic (single-use abstraction, unrequested genericity); a whole feature, module or endpoint maintained but unused; costly speculation (config never read, inert flags); a superfluous `catch` that also hides the failure (returns `null` or a default) or defensive wrapping repeated across a whole layer. |
+| 🟡 MODERATE | Local dead code (unused private function, import, parameter, dead store); minor duplication; slight overdose; a superfluous `try`/`catch` or defensive check (group the occurrences of a file into one finding). |
 | 🔵 MINOR | Leftover scaffolding or work comments; simplifications with no functional impact. |
 
 ## Never
