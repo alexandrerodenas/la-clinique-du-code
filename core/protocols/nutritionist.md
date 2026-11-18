@@ -21,7 +21,8 @@ relative to real uses: should this code have been written, and at this size?
   module).
 
 An observation about *how* code is written goes under "For the Therapist";
-do not treat it.
+do not treat it. A useless `else` after a `return` or a `throw` is form; a
+`try`/`catch` or a check that protects against nothing is dose, and is yours.
 
 ## Consultation protocol
 
@@ -45,6 +46,16 @@ do not treat it.
       serialization, validation).
    4. **Dosage** — written complexity vs. the domain's real complexity: does a
       30-line need take 300?
+   5. **Defensive overdose** — protection against failures that cannot
+      happen. A `try`/`catch` is necessary only if it recovers, translates the
+      error at a boundary, or releases a resource; otherwise it is a portion
+      nobody eats: catch-and-rethrow, catch-log-rethrow under a handler that
+      already logs, a `try` around code that cannot throw what it catches,
+      the same error wrapped at every layer. Same diet for checks of states
+      the types or the callers already exclude, and for a final `else` branch
+      that throws on a case the preceding branches make impossible. Establish
+      it like any use: find what can actually throw (signatures, callees) and
+      who handles it upstream before calling a catch superfluous.
 4. **Verify before declaring anything dead.** A missing static reference is
    not proof. Check for dynamic uses: reflection, dependency injection,
    framework conventions (routes, handlers, migrations, fixtures), string-based
@@ -70,8 +81,8 @@ do not treat it.
 | Level | For the Nutritionist |
 |---|---|
 | 🔴 CRITICAL | Dead code that masquerades as live (a branch never reached that looks active, an endpoint that looks exposed but is not); two competing implementations of the same feature; a reinvented wheel on a critical path that introduces bugs. |
-| 🟠 IMPORTANT | Over-engineering that complicates core logic (single-use abstraction, unrequested genericity); a whole feature, module or endpoint maintained but unused; costly speculation (config never read, inert flags). |
-| 🟡 MODERATE | Local dead code (unused private function, import, parameter); minor duplication; slight overdose. |
+| 🟠 IMPORTANT | Over-engineering that complicates core logic (single-use abstraction, unrequested genericity); a whole feature, module or endpoint maintained but unused; costly speculation (config never read, inert flags); a superfluous `catch` that also hides the failure (returns `null` or a default) or defensive wrapping repeated across a whole layer. |
+| 🟡 MODERATE | Local dead code (unused private function, import, parameter); minor duplication; slight overdose; a superfluous `try`/`catch` or defensive check (group the occurrences of a file into one finding). |
 | 🔵 MINOR | Leftover scaffolding or work comments; simplifications with no functional impact. |
 
 ## Never

@@ -52,7 +52,10 @@ def test_premium_customer_gets_ten_percent_discount():
 2. **Map behaviors to tests.** For the production code in scope, list the
    behaviors that matter (nominal path, edge cases, error paths). For each,
    find the test that would catch its regression — or note that none does.
-   New behavior without a test is a finding.
+   New behavior without a test is a finding. Every guard clause (an early
+   `throw` or `return` on invalid input) is an error-path behavior: it needs a
+   test with the value that triggers it, asserting the exception type or the
+   returned value.
 3. **Apply the checklist** to each test in scope:
    - **Relevance of assertions** — mentally mutate the code (flip a condition,
      drop a line, return a constant): would a test fail? Too weak (`toBeTruthy`,
@@ -71,6 +74,16 @@ def test_premium_customer_gets_ten_percent_discount():
      of the suite.
    - **Shared setup** — fixtures, builders and fakes reused without hiding the
      context each test depends on.
+   - **Exceptions and control flow** — an expected exception is asserted with
+     the framework's construct (`assertThrows`, `pytest.raises`,
+     `expect(...).toThrow`, `assert.throws`), never with a hand-written
+     `try { call(); fail(); } catch (...) {}`. A `try`/`catch` that wraps
+     assertions or catches broadly (`Exception`, `Throwable`, bare `except`)
+     can swallow the assertion error itself: the test then passes whatever
+     the code does, which makes it tautological. A `try`/`catch` around setup
+     "just in case" hides the real cause of a failure. A test has a single
+     path: `if`/`else`, loops or early `return` choosing which assertions run
+     mean it is testing several behaviors, or none.
 4. **Run the tests (read-only, optional but recommended).** Run only the
    relevant tests, with per-test timing, e.g. `pytest --durations=0 <files>`,
    `npx jest --verbose <files>`, `npx vitest run <files>`, `go test -v ./pkg/...`,
@@ -85,8 +98,8 @@ def test_premium_customer_gets_ten_percent_discount():
 | Level | For the Diagnostician |
 |---|---|
 | 🔴 CRITICAL | Tests in scope fail or do not run; a critical behavior has no test at all; the only test of a critical behavior is tautological. |
-| 🟠 IMPORTANT | Tautological test (minimum); a test that would not fail on an obvious regression; important behavior or error path untested; flaky or order-dependent test; test over 5 s. |
-| 🟡 MODERATE | Over-mocking or coupling to internals; missing edge cases on non-critical code; unclear structure or naming; setup duplicated across tests. |
+| 🟠 IMPORTANT | Tautological test (minimum), including a `try`/`catch` that swallows the assertion error; a test that would not fail on an obvious regression; important behavior or error path untested (a guard clause without its test); flaky or order-dependent test; test over 5 s. |
+| 🟡 MODERATE | Over-mocking or coupling to internals; missing edge cases on non-critical code; unclear structure or naming; setup duplicated across tests; hand-written `try`/`fail`/`catch` instead of the framework's exception assertion; conditional logic in a test. |
 | 🔵 MINOR | Style and consistency nitpicks. |
 
 ## Never
