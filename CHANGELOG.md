@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Removed
+- The `/soins-intensifs` alias (Claude Code, OpenCode and Copilot command,
+  prompt and extension entries). Use `/intensive-care`, consistent with
+  `/checkup` and `/security-checkup`. The installer does not prune files it no
+  longer ships: after a manual install, delete `commands/soins-intensifs.md`
+  (Claude Code, OpenCode) or `.github/prompts/soins-intensifs.prompt.md`
+  (Copilot) by hand.
+
 ### Protocols
 - Code Therapist: new *Control flow* lens and three house smells generated
   code produces often — late guards (a final `else` that only throws),

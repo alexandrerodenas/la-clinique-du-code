@@ -1,6 +1,6 @@
 ---
 name: intensive-care
-description: The Code Clinic intensive care loop. Alternates read-only checkups with Surgeon operations on actionable 🔴 CRITICAL and 🟠 IMPORTANT findings only, and stops as soon as none remain, on failure, refusal or lack of progress, or at the 10-pass safety cap. Use only when the user explicitly runs /intensive-care or /soins-intensifs.
+description: The Code Clinic intensive care loop. Alternates read-only checkups with Surgeon operations on actionable 🔴 CRITICAL and 🟠 IMPORTANT findings only, and stops as soon as none remain, on failure, refusal or lack of progress, or at the 10-pass safety cap. Use only when the user explicitly runs /intensive-care.
 ---
 
 # Intensive care

@@ -36,8 +36,7 @@ each agent in the native format of Claude Code, OpenCode and GitHub Copilot
 (tools and permissions derived from its access level). Generated files carry
 a header saying so; CI fails if they drift from `core/`.
 
-Commands (`/checkup`, `/intensive-care`, `/soins-intensifs`,
-`/security-checkup`) are thin, hand-written per adapter: each one loads a
+Commands (`/checkup`, `/intensive-care`, `/security-checkup`) are thin, hand-written per adapter: each one loads a
 protocol and adds only the harness-specific delegation details.
 
 ## Guarantees the orchestrator must keep

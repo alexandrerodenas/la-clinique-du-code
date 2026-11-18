@@ -9,7 +9,7 @@ works **after** development, only when the user asks.
   read-only, one report with finding IDs and a proposed prescription.
 - `/security-checkup` — the Immunologist reviews a change; every finding has a
   reachable attack path.
-- `/intensive-care` (alias `/soins-intensifs`) — an explicit loop of checkup →
+- `/intensive-care` — an explicit loop of checkup →
   Surgeon → checkup on actionable 🔴/🟠 findings only. It stops when none
   remain, on failure or lack of progress, or at 10 passes. Never start it
   yourself.

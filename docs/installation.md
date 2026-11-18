@@ -27,8 +27,7 @@ claude plugin install la-clinique-du-code@la-clinique-du-code
 
 Restart Claude Code. Update later with `claude plugin update la-clinique-du-code`.
 The plugin provides the 8 skills, the 6 practitioner subagents and the
-`/checkup`, `/security-checkup`, `/intensive-care` and `/soins-intensifs`
-commands. See [`plugin/README.md`](../plugin/README.md).
+`/checkup`, `/security-checkup` and `/intensive-care` commands. See [`plugin/README.md`](../plugin/README.md).
 
 ### Manual install
 
@@ -68,8 +67,7 @@ This writes, in the target project:
 - `.github/skills/` — the 8 protocols;
 - `.github/agents/` — the 6 practitioners plus the `checkup`,
   `intensive-care` and `security-checkup` coordinators;
-- `.github/prompts/` — `/checkup`, `/security-checkup`, `/intensive-care`,
-  `/soins-intensifs`;
+- `.github/prompts/` — `/checkup`, `/security-checkup`, `/intensive-care`;
 - `.github/extensions/la-clinique-du-code/extension.mjs` — native commands
   and tools for the Copilot application;
 - a Clinic block in `.github/copilot-instructions.md`, between

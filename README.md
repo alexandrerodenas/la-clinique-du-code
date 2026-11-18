@@ -55,7 +55,7 @@ in [`core/clinic-principles.md`](core/clinic-principles.md).
 |---|---|
 | `/checkup [path… \| branch:<name>]` | The Therapist and the Diagnostician examine the scope in parallel, read-only; one clinical report with a proposed prescription. |
 | `/security-checkup [path… \| branch:<name>]` | The Immunologist reviews a change for reachable threats. |
-| `/intensive-care [path… \| branch:<name>]` | Checkup → Surgeon → checkup, **only** on actionable 🔴/🟠 findings, until none remain (stops on failure or lack of progress; 10-pass safety cap). Alias: `/soins-intensifs`. |
+| `/intensive-care [path… \| branch:<name>]` | Checkup → Surgeon → checkup, **only** on actionable 🔴/🟠 findings, until none remain (stops on failure or lack of progress; 10-pass safety cap). |
 
 The Radiologist and the Nutritionist are consulted by name ("ask the
 radiologist for this repo's zone of pain", "have the nutritionist look at
